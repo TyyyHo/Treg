@@ -38,6 +38,11 @@ describe("parseArgs", () => {
     expect(parsed.command).toBe("list")
   })
 
+  it("accepts additional frameworks", () => {
+    const parsed = parseArgs(["init", "--framework", "svelte"])
+    expect(parsed.framework).toBe("svelte")
+  })
+
   it("throws when init is missing framework", () => {
     expect(() => parseArgs(["init"])).toThrow(
       "Missing required option: --framework"
@@ -45,8 +50,8 @@ describe("parseArgs", () => {
   })
 
   it("throws for unsupported framework", () => {
-    expect(() => parseArgs(["init", "--framework", "vue"])).toThrow(
-      "Unsupported framework: vue"
+    expect(() => parseArgs(["init", "--framework", "angular"])).toThrow(
+      "Unsupported framework: angular"
     )
   })
 

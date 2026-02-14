@@ -1,6 +1,6 @@
 const ALLOWED_COMMANDS = ["init", "add", "list"]
 const ALLOWED_PACKAGE_MANAGERS = ["pnpm", "npm", "yarn", "auto"]
-const ALLOWED_FRAMEWORKS = ["node", "react"]
+const ALLOWED_FRAMEWORKS = ["node", "react", "next", "vue", "svelte"]
 const ALLOWED_FEATURES = ["lint", "format", "typescript", "test", "husky"]
 const ALLOWED_TEST_RUNNERS = ["jest", "vitest"]
 
@@ -12,7 +12,8 @@ Commands:
   list                                List supported frameworks, features, and test runners
 
 Options:
-  --framework <node|react>            Target framework
+  --framework <node|react|next|vue|svelte>
+                                      Target framework
   --framework-version <major>         Optional framework major version hint
   --features <lint,format,typescript,test,husky>
                                       Features to install (all selected by default)
@@ -146,7 +147,7 @@ export function resolveFeatures(options) {
 }
 
 export function printSupportedTargets() {
-  console.log("Frameworks: node, react")
+  console.log("Frameworks: node, react, next, vue, svelte")
   console.log("Features: lint, format, typescript, test, husky")
   console.log("Test runners: jest, vitest")
 }

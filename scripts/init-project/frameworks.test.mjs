@@ -2,9 +2,26 @@ import { describe, expect, it } from "@jest/globals"
 import { detectFramework, resolveFramework } from "./frameworks/index.mjs"
 
 describe("frameworks", () => {
+  it("detects next before react", () => {
+    const framework = detectFramework({
+      dependencies: { next: "15.0.0", react: "19.0.0" },
+    })
+    expect(framework.id).toBe("next")
+  })
+
   it("detects react from dependencies", () => {
     expect(detectFramework({ dependencies: { react: "19.0.0" } }).id).toBe(
       "react"
+    )
+  })
+
+  it("detects vue from dependencies", () => {
+    expect(detectFramework({ dependencies: { vue: "3.5.0" } }).id).toBe("vue")
+  })
+
+  it("detects svelte from dependencies", () => {
+    expect(detectFramework({ dependencies: { svelte: "5.0.0" } }).id).toBe(
+      "svelte"
     )
   })
 

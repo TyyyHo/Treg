@@ -26,8 +26,11 @@ function getVitestSetup(frameworkId) {
 export async function runTestVitestRule(context) {
   const { framework, projectDir, pm, force, dryRun } = context
   const deps = ["vitest"]
+  if (framework.testEnvironment === "jsdom") {
+    deps.push("jsdom")
+  }
   if (framework.id === "react") {
-    deps.push("jsdom", "@testing-library/jest-dom")
+    deps.push("@testing-library/jest-dom")
   }
   installPackages(pm, deps, true, dryRun)
 

@@ -27,7 +27,8 @@ init                                 Initialize infra rules (requires --framewor
 add                                  Add selected infra features
 list                                 List supported targets
 
---framework <node|react>             Target framework
+--framework <node|react|next|vue|svelte>
+                                      Target framework
 --framework-version <major>          Optional framework major version hint
 --pm <pnpm|npm|yarn|auto>            Package manager (auto-detected by default)
 --features <lint,format,typescript,test,husky>
