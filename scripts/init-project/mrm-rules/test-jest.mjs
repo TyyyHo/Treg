@@ -33,7 +33,7 @@ export async function runTestJestRule(context) {
   if (framework.id === "react") {
     deps.push("@testing-library/jest-dom")
   }
-  installPackages(pm, deps, true, dryRun)
+  installPackages(projectDir, pm, deps, true, dryRun)
 
   await writeFile(
     projectDir,

@@ -18,7 +18,13 @@ export function getInstallOptions(pm) {
   return {}
 }
 
-export function installPackages(pm, packages, dev = true, dryRun = false) {
+export function installPackages(
+  projectDir,
+  pm,
+  packages,
+  dev = true,
+  dryRun = false
+) {
   if (packages.length === 0) return
   if (dryRun) {
     console.log(
@@ -26,7 +32,9 @@ export function installPackages(pm, packages, dev = true, dryRun = false) {
     )
     return
   }
-  install(packages, { ...getInstallOptions(pm), dev })
+  withProjectCwd(projectDir, () => {
+    install(packages, { ...getInstallOptions(pm), dev })
+  })
 }
 
 export async function writeFile(

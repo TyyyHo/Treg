@@ -2,6 +2,13 @@ import { describe, expect, it } from "@jest/globals"
 import { detectFramework, resolveFramework } from "./frameworks/index.mjs"
 
 describe("frameworks", () => {
+  it("detects nuxt before next", () => {
+    const framework = detectFramework({
+      dependencies: { nuxt: "4.0.0", next: "15.0.0", react: "19.0.0" },
+    })
+    expect(framework.id).toBe("nuxt")
+  })
+
   it("detects next before react", () => {
     const framework = detectFramework({
       dependencies: { next: "15.0.0", react: "19.0.0" },
@@ -33,5 +40,9 @@ describe("frameworks", () => {
     expect(
       resolveFramework("node", { dependencies: { react: "19.0.0" } }).id
     ).toBe("node")
+  })
+
+  it("resolves explicit nuxt framework", () => {
+    expect(resolveFramework("nuxt", { dependencies: {} }).id).toBe("nuxt")
   })
 })

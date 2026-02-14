@@ -1,21 +1,20 @@
 import { packageJson } from "../mrm-core.mjs"
 import { installPackages, withProjectCwd, writeFile } from "./shared.mjs"
 
-function getVitestConfig(frameworkId) {
-  const environment = frameworkId === "react" ? "jsdom" : "node"
+function getVitestConfig(framework) {
   return `import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
-    environment: "${environment}",
+    environment: "${framework.testEnvironment}",
     setupFiles: ["./vitest.setup.js"],
   },
 })
 `
 }
 
-function getVitestSetup(frameworkId) {
-  if (frameworkId === "react") {
+function getVitestSetup(framework) {
+  if (framework.id === "react") {
     return `import "@testing-library/jest-dom/vitest"
 `
   }
@@ -32,19 +31,19 @@ export async function runTestVitestRule(context) {
   if (framework.id === "react") {
     deps.push("@testing-library/jest-dom")
   }
-  installPackages(pm, deps, true, dryRun)
+  installPackages(projectDir, pm, deps, true, dryRun)
 
   await writeFile(
     projectDir,
     "vitest.config.mjs",
-    getVitestConfig(framework.id),
+    getVitestConfig(framework),
     force,
     dryRun
   )
   await writeFile(
     projectDir,
     "vitest.setup.js",
-    getVitestSetup(framework.id),
+    getVitestSetup(framework),
     force,
     dryRun
   )

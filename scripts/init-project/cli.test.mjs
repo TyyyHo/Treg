@@ -29,6 +29,7 @@ describe("parseArgs", () => {
       force: true,
       dryRun: true,
       skipHuskyInstall: true,
+      skills: false,
       help: false,
     })
   })
@@ -39,6 +40,16 @@ describe("parseArgs", () => {
   })
 
   it("accepts additional frameworks", () => {
+    const parsed = parseArgs(["init", "--framework", "nuxt"])
+    expect(parsed.framework).toBe("nuxt")
+  })
+
+  it("parses skills flag", () => {
+    const parsed = parseArgs(["add", "--skills"])
+    expect(parsed.skills).toBe(true)
+  })
+
+  it("accepts svelte framework", () => {
     const parsed = parseArgs(["init", "--framework", "svelte"])
     expect(parsed.framework).toBe("svelte")
   })

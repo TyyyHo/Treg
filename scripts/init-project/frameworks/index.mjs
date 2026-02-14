@@ -1,5 +1,6 @@
 import { nextFramework } from "./next/index.mjs"
 import { nodeFramework } from "./node/index.mjs"
+import { nuxtFramework } from "./nuxt/index.mjs"
 import { reactFramework } from "./react/index.mjs"
 import { svelteFramework } from "./svelte/index.mjs"
 import { vueFramework } from "./vue/index.mjs"
@@ -7,12 +8,14 @@ import { vueFramework } from "./vue/index.mjs"
 const FRAMEWORK_REGISTRY = {
   next: nextFramework,
   node: nodeFramework,
+  nuxt: nuxtFramework,
   react: reactFramework,
   svelte: svelteFramework,
   vue: vueFramework,
 }
 
 const FRAMEWORK_DETECT_ORDER = [
+  nuxtFramework,
   nextFramework,
   reactFramework,
   vueFramework,

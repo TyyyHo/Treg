@@ -27,7 +27,7 @@ init                                 Initialize infra rules (requires --framewor
 add                                  Add selected infra features
 list                                 List supported targets
 
---framework <node|react|next|vue|svelte>
+--framework <node|react|next|vue|svelte|nuxt>
                                       Target framework
 --framework-version <major>          Optional framework major version hint
 --pm <pnpm|npm|yarn|auto>            Package manager (auto-detected by default)
@@ -37,6 +37,7 @@ list                                 List supported targets
 --force                               Overwrite existing config files
 --dry-run                             Show planned changes without writing files
 --skip-husky-install                  Do not run husky install
+--skills                              Update AGENTS.md/CLAUDE.md with feature skill guidance
 --help                                Show help
 ```
 
@@ -64,6 +65,12 @@ Preview changes only:
 
 ```bash
 frontend-rules init . --framework react --dry-run
+```
+
+Enable AI skill guidance update:
+
+```bash
+frontend-rules add . --features lint,format,husky --skills
 ```
 
 ## Publish
