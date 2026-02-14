@@ -1,0 +1,74 @@
+# frontend-rules
+
+`frontend-rules` is a CLI that bootstraps project infra rules into an existing repository.
+
+## Usage
+
+```bash
+pnpm dlx frontend-rules init <project-dir> --framework react
+# or
+npx frontend-rules init <project-dir> --framework react
+```
+
+By default, all features are applied:
+
+- `husky`
+- `typescript`
+- `lint`
+- `format`
+- `test`
+
+## Options
+
+```bash
+frontend-rules <command> [projectDir] [options]
+
+init                                 Initialize infra rules (requires --framework)
+add                                  Add selected infra features
+list                                 List supported targets
+
+--framework <node|react>             Target framework
+--framework-version <major>          Optional framework major version hint
+--pm <pnpm|npm|yarn|auto>            Package manager (auto-detected by default)
+--features <lint,format,typescript,test,husky>
+                                      Features to install (all selected by default)
+--test-runner <jest|vitest>          Test runner when test feature is enabled
+--force                               Overwrite existing config files
+--dry-run                             Show planned changes without writing files
+--skip-husky-install                  Do not run husky install
+--help                                Show help
+```
+
+## Examples
+
+Initialize a React project:
+
+```bash
+frontend-rules init . --framework react
+```
+
+Add only lint and format:
+
+```bash
+frontend-rules add . --features lint,format
+```
+
+Use Vitest:
+
+```bash
+frontend-rules init . --framework node --features test --test-runner vitest
+```
+
+Preview changes only:
+
+```bash
+frontend-rules init . --framework react --dry-run
+```
+
+## Publish
+
+```bash
+pnpm install
+pnpm run prepublishOnly
+npm publish --access public
+```
