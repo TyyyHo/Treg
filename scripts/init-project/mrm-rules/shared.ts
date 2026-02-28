@@ -3,8 +3,9 @@ import { promises as fs } from "node:fs"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { installPackages as installByPackageManager } from "../package-manager.ts"
+import type { PackageJson, PackageManager } from "../types.ts"
 
-export function withProjectCwd(projectDir, fn) {
+export function withProjectCwd<T>(projectDir: string, fn: () => T): T {
   const original = process.cwd()
   process.chdir(projectDir)
   try {
@@ -14,19 +15,22 @@ export function withProjectCwd(projectDir, fn) {
   }
 }
 
-export function getInstallOptions(pm) {
+export function getInstallOptions(pm: PackageManager): {
+  pnpm?: true
+  yarn?: true
+} {
   if (pm === "pnpm") return { pnpm: true }
   if (pm === "yarn") return { yarn: true }
   return {}
 }
 
 export function installPackages(
-  projectDir,
-  pm,
-  packages,
+  projectDir: string,
+  pm: PackageManager,
+  packages: string[],
   dev = true,
   dryRun = false
-) {
+): void {
   const missingPackages = filterUninstalledPackages(projectDir, packages)
   if (missingPackages.length === 0) {
     console.log(`Skip install (already present): ${packages.join(", ")}`)
@@ -41,7 +45,10 @@ export function installPackages(
   installByPackageManager(pm, projectDir, missingPackages, dev, dryRun)
 }
 
-export function filterUninstalledPackages(projectDir, packages) {
+export function filterUninstalledPackages(
+  projectDir: string,
+  packages: string[]
+): string[] {
   if (packages.length === 0) return []
 
   const installed = getInstalledPackageNames(projectDir)
@@ -50,13 +57,15 @@ export function filterUninstalledPackages(projectDir, packages) {
   return packages.filter(pkg => !installed.has(getPackageName(pkg)))
 }
 
-function getInstalledPackageNames(projectDir) {
+function getInstalledPackageNames(projectDir: string): Set<string> {
   const packageJsonPath = path.join(projectDir, "package.json")
   if (!existsSync(packageJsonPath)) return new Set()
 
   try {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"))
-    return new Set([
+    const packageJson = JSON.parse(
+      readFileSync(packageJsonPath, "utf8")
+    ) as PackageJson
+    return new Set<string>([
       ...Object.keys(packageJson.dependencies ?? {}),
       ...Object.keys(packageJson.devDependencies ?? {}),
       ...Object.keys(packageJson.peerDependencies ?? {}),
@@ -67,7 +76,7 @@ function getInstalledPackageNames(projectDir) {
   }
 }
 
-function getPackageName(pkg) {
+function getPackageName(pkg: string): string {
   if (pkg.startsWith("@")) {
     const scopeEnd = pkg.indexOf("/", 1)
     if (scopeEnd < 0) return pkg
@@ -80,12 +89,12 @@ function getPackageName(pkg) {
 }
 
 export async function writeFile(
-  projectDir,
-  relativePath,
-  content,
-  force,
-  dryRun
-) {
+  projectDir: string,
+  relativePath: string,
+  content: string,
+  force: boolean,
+  dryRun: boolean
+): Promise<boolean> {
   const targetPath = path.join(projectDir, relativePath)
   try {
     await fs.access(targetPath)

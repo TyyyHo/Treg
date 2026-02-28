@@ -1,25 +1,33 @@
 import { hasPackage } from "../../utils.ts"
 import { reactV18Framework } from "./v18/index.ts"
 import { reactV19Framework } from "./v19/index.ts"
+import type {
+  DetectableFramework,
+  Framework,
+  PackageJson,
+} from "../../types.ts"
 
-export const reactFramework = {
+export const reactFramework: DetectableFramework = {
   id: "react",
   variant: "v19",
   testEnvironment: "jsdom",
   tsRequiredExcludes: ["dist", "coverage", "jest.config.js", "public"],
-  matches(packageJson) {
+  matches(packageJson: PackageJson) {
     return (
       hasPackage(packageJson, "react") || hasPackage(packageJson, "react-dom")
     )
   },
 }
 
-const REACT_VARIANTS = {
-  18: reactV18Framework,
-  19: reactV19Framework,
+const REACT_VARIANTS: Record<string, Framework> = {
+  "18": reactV18Framework,
+  "19": reactV19Framework,
 }
 
-export function resolveReactFramework(packageJson, frameworkVersion) {
+export function resolveReactFramework(
+  packageJson: PackageJson,
+  frameworkVersion: string | null
+): Framework {
   if (frameworkVersion && REACT_VARIANTS[frameworkVersion]) {
     return REACT_VARIANTS[frameworkVersion]
   }

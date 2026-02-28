@@ -1,7 +1,8 @@
 import { packageJson } from "../mrm-core.ts"
 import { installPackages, withProjectCwd, writeFile } from "./shared.ts"
+import type { Framework, RuleContext } from "../types.ts"
 
-function getJestConfig(testEnvironment) {
+function getJestConfig(testEnvironment: Framework["testEnvironment"]): string {
   return `/** @type {import("jest").Config} */
 const config = {
   testEnvironment: "${testEnvironment}",
@@ -13,7 +14,7 @@ module.exports = config
 `
 }
 
-function getSetupFile(frameworkId) {
+function getSetupFile(frameworkId: Framework["id"]): string {
   if (frameworkId === "react") {
     return `require("@testing-library/jest-dom")
 
@@ -24,7 +25,7 @@ function getSetupFile(frameworkId) {
 `
 }
 
-export async function runTestJestRule(context) {
+export async function runTestJestRule(context: RuleContext): Promise<void> {
   const { framework, projectDir, pm, force, dryRun } = context
   const deps = ["jest"]
   if (framework.testEnvironment === "jsdom") {

@@ -1,0 +1,62 @@
+export type CommandName = "init" | "add" | "list"
+
+export type PackageManager = "pnpm" | "npm" | "yarn"
+export type PackageManagerOption = PackageManager | "auto"
+
+export type FrameworkId = "node" | "react" | "next" | "vue" | "svelte" | "nuxt"
+
+export type FeatureName = "lint" | "format" | "typescript" | "test" | "husky"
+export type TestRunner = "jest" | "vitest"
+export type TestEnvironment = "node" | "jsdom"
+
+export interface PackageJson {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  optionalDependencies?: Record<string, string>
+  [key: string]: unknown
+}
+
+export interface Framework {
+  id: FrameworkId
+  variant?: string
+  testEnvironment: TestEnvironment
+  tsRequiredExcludes: string[]
+}
+
+export interface DetectableFramework extends Framework {
+  matches: (packageJson: PackageJson) => boolean
+}
+
+export interface EnabledFeatures {
+  lint: boolean
+  format: boolean
+  typescript: boolean
+  test: boolean
+  husky: boolean
+}
+
+export interface ParsedOptions {
+  command: CommandName
+  projectDir: string | null
+  framework: FrameworkId | null
+  frameworkVersion: string | null
+  features: FeatureName[]
+  testRunner: TestRunner
+  pm: PackageManagerOption | null
+  force: boolean
+  dryRun: boolean
+  skipHuskyInstall: boolean
+  skills: boolean
+  help: boolean
+}
+
+export interface RuleContext extends Omit<
+  ParsedOptions,
+  "projectDir" | "framework" | "pm"
+> {
+  projectDir: string
+  framework: Framework
+  pm: PackageManager
+  enabledFeatures: EnabledFeatures
+}

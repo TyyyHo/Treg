@@ -4,8 +4,14 @@ import { nuxtFramework } from "./nuxt/index.ts"
 import { reactFramework, resolveReactFramework } from "./react/index.ts"
 import { svelteFramework } from "./svelte/index.ts"
 import { vueFramework } from "./vue/index.ts"
+import type {
+  DetectableFramework,
+  Framework,
+  FrameworkId,
+  PackageJson,
+} from "../types.ts"
 
-const FRAMEWORK_REGISTRY = {
+const FRAMEWORK_REGISTRY: Record<FrameworkId, DetectableFramework> = {
   next: nextFramework,
   node: nodeFramework,
   nuxt: nuxtFramework,
@@ -14,7 +20,7 @@ const FRAMEWORK_REGISTRY = {
   vue: vueFramework,
 }
 
-const FRAMEWORK_DETECT_ORDER = [
+const FRAMEWORK_DETECT_ORDER: DetectableFramework[] = [
   nuxtFramework,
   nextFramework,
   reactFramework,
@@ -23,7 +29,11 @@ const FRAMEWORK_DETECT_ORDER = [
   nodeFramework,
 ]
 
-export function resolveFramework(frameworkArg, frameworkVersion, packageJson) {
+export function resolveFramework(
+  frameworkArg: FrameworkId | null,
+  frameworkVersion: string | null,
+  packageJson: PackageJson
+): Framework {
   if (frameworkArg === "react") {
     return resolveReactFramework(packageJson, frameworkVersion)
   }
@@ -40,7 +50,7 @@ export function resolveFramework(frameworkArg, frameworkVersion, packageJson) {
   return detected
 }
 
-export function detectFramework(packageJson) {
+export function detectFramework(packageJson: PackageJson): DetectableFramework {
   const matched = FRAMEWORK_DETECT_ORDER.find(framework =>
     framework.matches(packageJson)
   )

@@ -4,8 +4,12 @@ import { packageJson } from "../mrm-core.ts"
 import { existsSync } from "node:fs"
 import { getRunCommand, runCommand } from "../package-manager.ts"
 import { installPackages, withProjectCwd, writeFile } from "./shared.ts"
+import type { EnabledFeatures, PackageManager, RuleContext } from "../types.ts"
 
-function buildHookCommands(runner, enabledFeatures) {
+function buildHookCommands(
+  runner: ReturnType<typeof getRunCommand>,
+  enabledFeatures: EnabledFeatures
+): { preCommit: string[]; prePush: string[] } {
   const preCommit = [
     `${runner} format:check || exit 1`,
     `${runner} lint:check || exit 1`,
@@ -22,7 +26,7 @@ function buildHookCommands(runner, enabledFeatures) {
   return { preCommit, prePush }
 }
 
-export async function runHuskyRule(context) {
+export async function runHuskyRule(context: RuleContext): Promise<void> {
   const { projectDir, pm, force, dryRun, skipHuskyInstall, enabledFeatures } =
     context
 
@@ -67,12 +71,18 @@ export async function runHuskyRule(context) {
     return
   }
   if (!dryRun) {
-    if (pm === "pnpm") {
-      runCommand("pnpm exec husky", projectDir, false)
-    } else if (pm === "yarn") {
-      runCommand("yarn husky", projectDir, false)
-    } else {
-      runCommand("npx husky", projectDir, false)
-    }
+    runHuskyInstallCommand(pm, projectDir)
   }
+}
+
+function runHuskyInstallCommand(pm: PackageManager, projectDir: string): void {
+  if (pm === "pnpm") {
+    runCommand("pnpm exec husky", projectDir, false)
+    return
+  }
+  if (pm === "yarn") {
+    runCommand("yarn husky", projectDir, false)
+    return
+  }
+  runCommand("npx husky", projectDir, false)
 }

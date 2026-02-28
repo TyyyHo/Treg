@@ -1,8 +1,9 @@
 import { execSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import path from "node:path"
+import type { PackageManager } from "./types.ts"
 
-export function detectPackageManager(projectDir) {
+export function detectPackageManager(projectDir: string): PackageManager {
   if (existsSync(path.join(projectDir, "pnpm-lock.yaml"))) {
     return "pnpm"
   }
@@ -15,13 +16,13 @@ export function detectPackageManager(projectDir) {
   return "npm"
 }
 
-export function getRunCommand(pm) {
+export function getRunCommand(pm: PackageManager): string {
   if (pm === "pnpm") return "pnpm"
   if (pm === "yarn") return "yarn"
   return "npm run"
 }
 
-export function runCommand(command, cwd, dryRun = false) {
+export function runCommand(command: string, cwd: string, dryRun = false): void {
   if (dryRun) {
     console.log(`[dry-run] Would run: ${command}`)
     return
@@ -29,7 +30,12 @@ export function runCommand(command, cwd, dryRun = false) {
   execSync(command, { cwd, stdio: "inherit" })
 }
 
-export function runScript(pm, scriptName, cwd, dryRun = false) {
+export function runScript(
+  pm: PackageManager,
+  scriptName: string,
+  cwd: string,
+  dryRun = false
+): void {
   if (pm === "pnpm") {
     runCommand(`pnpm ${scriptName}`, cwd, dryRun)
     return
@@ -42,12 +48,12 @@ export function runScript(pm, scriptName, cwd, dryRun = false) {
 }
 
 export function installPackages(
-  pm,
-  projectDir,
-  packages,
-  isDev,
+  pm: PackageManager,
+  projectDir: string,
+  packages: string[],
+  isDev: boolean,
   dryRun = false
-) {
+): void {
   if (packages.length === 0) return
 
   const list = packages.join(" ")

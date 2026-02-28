@@ -1,7 +1,8 @@
 import { packageJson } from "../mrm-core.ts"
 import { installPackages, withProjectCwd, writeFile } from "./shared.ts"
+import type { Framework, RuleContext } from "../types.ts"
 
-function getVitestConfig(framework) {
+function getVitestConfig(framework: Framework): string {
   return `import { defineConfig } from "vitest/config"
 
 export default defineConfig({
@@ -13,7 +14,7 @@ export default defineConfig({
 `
 }
 
-function getVitestSetup(framework) {
+function getVitestSetup(framework: Framework): string {
   if (framework.id === "react") {
     return `import "@testing-library/jest-dom/vitest"
 `
@@ -22,7 +23,7 @@ function getVitestSetup(framework) {
 `
 }
 
-export async function runTestVitestRule(context) {
+export async function runTestVitestRule(context: RuleContext): Promise<void> {
   const { framework, projectDir, pm, force, dryRun } = context
   const deps = ["vitest"]
   if (framework.testEnvironment === "jsdom") {

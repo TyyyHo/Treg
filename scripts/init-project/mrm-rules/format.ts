@@ -1,5 +1,6 @@
 import { lines, packageJson } from "../mrm-core.ts"
 import { installPackages, withProjectCwd, writeFile } from "./shared.ts"
+import type { RuleContext } from "../types.ts"
 
 const PRETTIER_CONFIG = `{
   "semi": false,
@@ -28,7 +29,7 @@ const PRETTIER_IGNORE = [
   "yarn.lock",
 ]
 
-export async function runFormatRule(context) {
+export async function runFormatRule(context: RuleContext): Promise<void> {
   const { projectDir, pm, force, dryRun } = context
   installPackages(projectDir, pm, ["prettier"], true, dryRun)
 

@@ -1,12 +1,25 @@
 import { existsSync } from "node:fs"
 import { promises as fs } from "node:fs"
 import path from "node:path"
+import type {
+  EnabledFeatures,
+  FeatureName,
+  RuleContext,
+  TestRunner,
+} from "../types.ts"
 
 const START_MARKER = "<!-- treg:skills:start -->"
 const END_MARKER = "<!-- treg:skills:end -->"
 const SKILLS_BASE_DIR = "skills"
 
-const FEATURE_SKILLS = {
+interface SkillDefinition {
+  name: string
+  description: string
+  when: string
+  checklist: string[]
+}
+
+const FEATURE_SKILLS: Record<FeatureName, SkillDefinition> = {
   format: {
     name: "treg/format",
     description: "Run and verify formatting rules.",
@@ -51,7 +64,7 @@ const FEATURE_SKILLS = {
   },
 }
 
-function resolveSkillsDoc(projectDir) {
+function resolveSkillsDoc(projectDir: string): string | null {
   const agentsPath = path.join(projectDir, "AGENTS.md")
   if (existsSync(agentsPath)) {
     return agentsPath
@@ -65,18 +78,22 @@ function resolveSkillsDoc(projectDir) {
   return null
 }
 
-function getEnabledFeatures(enabledFeatures) {
-  return Object.entries(enabledFeatures)
+function getEnabledFeatures(enabledFeatures: EnabledFeatures): FeatureName[] {
+  return (Object.entries(enabledFeatures) as Array<[FeatureName, boolean]>)
     .filter(([, value]) => value)
     .map(([name]) => name)
     .sort((a, b) => a.localeCompare(b))
 }
 
-function getSkillRelativePath(feature) {
+function getSkillRelativePath(feature: FeatureName): string {
   return `${SKILLS_BASE_DIR}/${feature}/SKILL.md`
 }
 
-function buildSkillFile(feature, skill, testRunner) {
+function buildSkillFile(
+  feature: FeatureName,
+  skill: SkillDefinition,
+  testRunner: TestRunner
+): string {
   const extra =
     feature === "test"
       ? `\n## Current Test Runner\n\n- \`${testRunner}\`\n`
@@ -98,7 +115,12 @@ ${skill.when}
 ${extra}`
 }
 
-async function ensureSkillFiles(projectDir, enabled, testRunner, dryRun) {
+async function ensureSkillFiles(
+  projectDir: string,
+  enabled: FeatureName[],
+  testRunner: TestRunner,
+  dryRun: boolean
+): Promise<void> {
   for (const feature of enabled) {
     const skill = FEATURE_SKILLS[feature]
     if (!skill) continue
@@ -124,7 +146,9 @@ async function ensureSkillFiles(projectDir, enabled, testRunner, dryRun) {
   }
 }
 
-function buildSkillSection(context) {
+function buildSkillSection(
+  context: Pick<RuleContext, "enabledFeatures" | "testRunner">
+): string {
   const { enabledFeatures, testRunner } = context
   const enabled = getEnabledFeatures(enabledFeatures)
 
@@ -156,7 +180,7 @@ function buildSkillSection(context) {
   return lines.join("\n")
 }
 
-function upsertSkillSection(content, nextSection) {
+function upsertSkillSection(content: string, nextSection: string): string {
   const start = content.indexOf(START_MARKER)
   const end = content.indexOf(END_MARKER)
 
@@ -175,7 +199,7 @@ function upsertSkillSection(content, nextSection) {
   return `${content.trimEnd()}\n\n${nextSection.trim()}\n`
 }
 
-export async function runAiSkillsRule(context) {
+export async function runAiSkillsRule(context: RuleContext): Promise<void> {
   const { projectDir, dryRun } = context
   const targetFile = resolveSkillsDoc(projectDir)
 

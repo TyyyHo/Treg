@@ -1,8 +1,9 @@
 /** @type {import("jest").Config} */
 const config = {
   testEnvironment: "node",
-  extensionsToTreatAsEsm: [".ts"],
-  transform: {},
+  transform: {
+    "^.+\\.ts$": "<rootDir>/jest.transform.cjs",
+  },
   testMatch: ["**/*.test.ts"],
 }
 
