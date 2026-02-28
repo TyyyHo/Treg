@@ -5,8 +5,9 @@ import { runLintRule } from "./lint.ts"
 import { runTestJestRule } from "./test-jest.ts"
 import { runTestVitestRule } from "./test-vitest.ts"
 import { runTypescriptRule } from "./typescript.ts"
+import type { RuleContext } from "../types.ts"
 
-export async function runFeatureRules(context) {
+export async function runFeatureRules(context: RuleContext): Promise<void> {
   const { enabledFeatures, skills, testRunner } = context
 
   if (enabledFeatures.format) {

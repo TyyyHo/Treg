@@ -11,11 +11,14 @@ import { resolveFramework } from "./frameworks/index.ts"
 import { runFeatureRules } from "./mrm-rules/index.ts"
 import { detectPackageManager, runScript } from "./package-manager.ts"
 import { formatStep } from "./utils.ts"
+import type { PackageJson, ParsedOptions, RuleContext } from "./types.ts"
 
 const TOTAL_STEPS = 3
 
-export async function main(argv = process.argv.slice(2)) {
-  let options
+export async function main(
+  argv: string[] = process.argv.slice(2)
+): Promise<void> {
+  let options: ParsedOptions
   try {
     options = parseArgs(argv)
   } catch (error) {
@@ -42,7 +45,9 @@ export async function main(argv = process.argv.slice(2)) {
     return
   }
 
-  const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"))
+  const packageJson = JSON.parse(
+    await fs.readFile(packageJsonPath, "utf8")
+  ) as PackageJson
   const pm =
     !options.pm || options.pm === "auto"
       ? detectPackageManager(projectDir)
@@ -61,7 +66,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   const enabledFeatures = resolveFeatures(options)
 
-  const context = {
+  const context: RuleContext = {
     ...options,
     projectDir,
     pm,

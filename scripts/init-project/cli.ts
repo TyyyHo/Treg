@@ -1,8 +1,36 @@
-const ALLOWED_COMMANDS = ["init", "add", "list"]
-const ALLOWED_PACKAGE_MANAGERS = ["pnpm", "npm", "yarn", "auto"]
-const ALLOWED_FRAMEWORKS = ["node", "react", "next", "vue", "svelte", "nuxt"]
-const ALLOWED_FEATURES = ["lint", "format", "typescript", "test", "husky"]
-const ALLOWED_TEST_RUNNERS = ["jest", "vitest"]
+import type {
+  CommandName,
+  EnabledFeatures,
+  FeatureName,
+  FrameworkId,
+  PackageManagerOption,
+  ParsedOptions,
+  TestRunner,
+} from "./types.ts"
+
+const ALLOWED_COMMANDS: readonly CommandName[] = ["init", "add", "list"]
+const ALLOWED_PACKAGE_MANAGERS: readonly PackageManagerOption[] = [
+  "pnpm",
+  "npm",
+  "yarn",
+  "auto",
+]
+const ALLOWED_FRAMEWORKS: readonly FrameworkId[] = [
+  "node",
+  "react",
+  "next",
+  "vue",
+  "svelte",
+  "nuxt",
+]
+const ALLOWED_FEATURES: readonly FeatureName[] = [
+  "lint",
+  "format",
+  "typescript",
+  "test",
+  "husky",
+]
+const ALLOWED_TEST_RUNNERS: readonly TestRunner[] = ["jest", "vitest"]
 
 export const USAGE = `Usage: treg <command> [options]
 
@@ -28,13 +56,55 @@ Options:
   -h, --help                          Show help
 `
 
-export function parseArgs(argv) {
-  const options = {
+interface RawParsedOptions {
+  command: string
+  projectDir: string | null
+  framework: string | null
+  frameworkVersion: string | null
+  features: string[]
+  testRunner: string
+  pm: string | null
+  force: boolean
+  dryRun: boolean
+  skipHuskyInstall: boolean
+  skills: boolean
+  help: boolean
+}
+
+function includes<T extends string>(
+  allowed: readonly T[],
+  value: string
+): value is T {
+  return allowed.includes(value as T)
+}
+
+function isCommandName(value: string): value is CommandName {
+  return includes(ALLOWED_COMMANDS, value)
+}
+
+function isPackageManagerOption(value: string): value is PackageManagerOption {
+  return includes(ALLOWED_PACKAGE_MANAGERS, value)
+}
+
+function isFrameworkId(value: string): value is FrameworkId {
+  return includes(ALLOWED_FRAMEWORKS, value)
+}
+
+function isFeatureName(value: string): value is FeatureName {
+  return includes(ALLOWED_FEATURES, value)
+}
+
+function isTestRunner(value: string): value is TestRunner {
+  return includes(ALLOWED_TEST_RUNNERS, value)
+}
+
+export function parseArgs(argv: string[]): ParsedOptions {
+  const options: RawParsedOptions = {
     command: "init",
     projectDir: null,
     framework: null,
     frameworkVersion: null,
-    features: new Array(),
+    features: [],
     testRunner: "jest",
     pm: null,
     force: false,
@@ -46,45 +116,51 @@ export function parseArgs(argv) {
 
   let cursor = 0
   const firstArg = argv[0]
-  if (firstArg && ALLOWED_COMMANDS.includes(firstArg)) {
+  if (firstArg && isCommandName(firstArg)) {
     options.command = firstArg
     cursor = 1
   }
 
   for (let i = cursor; i < argv.length; i += 1) {
     const arg = argv[i]
+    if (!arg) {
+      continue
+    }
+
     if (arg === "-h" || arg === "--help") {
       options.help = true
     } else if (arg === "--framework") {
-      options.framework = argv[i + 1]
+      options.framework = readFlagValue(argv, i, "--framework")
       i += 1
     } else if (arg.startsWith("--framework=")) {
-      options.framework = arg.split("=")[1]
+      options.framework = readInlineFlagValue(arg, "--framework")
     } else if (arg === "--framework-version") {
-      options.frameworkVersion = argv[i + 1]
+      options.frameworkVersion = readFlagValue(argv, i, "--framework-version")
       i += 1
     } else if (arg.startsWith("--framework-version=")) {
-      options.frameworkVersion = arg.split("=")[1]
+      options.frameworkVersion = readInlineFlagValue(arg, "--framework-version")
     } else if (arg === "--features") {
       options.features.push(...parseCsvValue(argv[i + 1], "--features"))
       i += 1
     } else if (arg.startsWith("--features=")) {
-      options.features.push(...parseCsvValue(arg.split("=")[1], "--features"))
+      options.features.push(
+        ...parseCsvValue(readInlineFlagValue(arg, "--features"), "--features")
+      )
     } else if (arg === "--dir") {
-      options.projectDir = argv[i + 1]
+      options.projectDir = readFlagValue(argv, i, "--dir")
       i += 1
     } else if (arg.startsWith("--dir=")) {
-      options.projectDir = arg.split("=")[1]
+      options.projectDir = readInlineFlagValue(arg, "--dir")
     } else if (arg === "--test-runner") {
-      options.testRunner = argv[i + 1]
+      options.testRunner = readFlagValue(argv, i, "--test-runner")
       i += 1
     } else if (arg.startsWith("--test-runner=")) {
-      options.testRunner = arg.split("=")[1]
+      options.testRunner = readInlineFlagValue(arg, "--test-runner")
     } else if (arg === "--pm") {
-      options.pm = argv[i + 1]
+      options.pm = readFlagValue(argv, i, "--pm")
       i += 1
     } else if (arg.startsWith("--pm=")) {
-      options.pm = arg.split("=")[1]
+      options.pm = readInlineFlagValue(arg, "--pm")
     } else if (arg === "--force") {
       options.force = true
     } else if (arg === "--dry-run") {
@@ -104,7 +180,30 @@ export function parseArgs(argv) {
   return options
 }
 
-function parseCsvValue(rawValue, flagName) {
+function readFlagValue(
+  argv: string[],
+  index: number,
+  flagName: string
+): string {
+  const value = argv[index + 1]
+  if (!value) {
+    throw new Error(`Missing value for ${flagName}`)
+  }
+  return value
+}
+
+function readInlineFlagValue(arg: string, flagName: string): string {
+  const [, rawValue] = arg.split("=", 2)
+  if (!rawValue) {
+    throw new Error(`Missing value for ${flagName}`)
+  }
+  return rawValue
+}
+
+function parseCsvValue(
+  rawValue: string | undefined,
+  flagName: string
+): string[] {
   if (!rawValue) {
     throw new Error(`Missing value for ${flagName}`)
   }
@@ -115,20 +214,22 @@ function parseCsvValue(rawValue, flagName) {
     .filter(Boolean)
 }
 
-function validateParsedOptions(options) {
-  if (!ALLOWED_COMMANDS.includes(options.command)) {
+function validateParsedOptions(
+  options: RawParsedOptions
+): asserts options is ParsedOptions {
+  if (!isCommandName(options.command)) {
     throw new Error(`Unsupported command: ${options.command}`)
   }
 
-  if (options.projectDir === undefined || options.projectDir === "") {
+  if (options.projectDir === "") {
     throw new Error("Missing value for --dir")
   }
 
-  if (options.pm && !ALLOWED_PACKAGE_MANAGERS.includes(options.pm)) {
+  if (options.pm && !isPackageManagerOption(options.pm)) {
     throw new Error(`Unsupported package manager: ${options.pm}`)
   }
 
-  if (options.framework && !ALLOWED_FRAMEWORKS.includes(options.framework)) {
+  if (options.framework && !isFrameworkId(options.framework)) {
     throw new Error(`Unsupported framework: ${options.framework}`)
   }
 
@@ -148,12 +249,12 @@ function validateParsedOptions(options) {
     )
   }
 
-  if (!ALLOWED_TEST_RUNNERS.includes(options.testRunner)) {
+  if (!isTestRunner(options.testRunner)) {
     throw new Error(`Unsupported test runner: ${options.testRunner}`)
   }
 
   for (const feature of options.features) {
-    if (!ALLOWED_FEATURES.includes(feature)) {
+    if (!isFeatureName(feature)) {
       throw new Error(`Unsupported feature in --features: ${feature}`)
     }
   }
@@ -163,8 +264,10 @@ function validateParsedOptions(options) {
   }
 }
 
-export function resolveFeatures(options) {
-  const selected = new Set(
+export function resolveFeatures(
+  options: Pick<ParsedOptions, "features">
+): EnabledFeatures {
+  const selected = new Set<FeatureName>(
     options.features.length > 0 ? options.features : ALLOWED_FEATURES
   )
 

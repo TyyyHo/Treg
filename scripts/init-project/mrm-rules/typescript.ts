@@ -1,5 +1,6 @@
 import { json, packageJson } from "../mrm-core.ts"
 import { installPackages, withProjectCwd } from "./shared.ts"
+import type { RuleContext } from "../types.ts"
 
 const TS_REQUIRED_OPTIONS = {
   strict: true,
@@ -12,7 +13,7 @@ const TS_REQUIRED_OPTIONS = {
   noUnusedParameters: true,
 }
 
-export async function runTypescriptRule(context) {
+export async function runTypescriptRule(context: RuleContext): Promise<void> {
   const { framework, projectDir, pm, dryRun } = context
   installPackages(projectDir, pm, ["typescript"], true, dryRun)
 

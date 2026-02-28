@@ -1,4 +1,6 @@
-export const reactV19Framework = {
+import type { Framework } from "../../../types.ts"
+
+export const reactV19Framework: Framework = {
   id: "react",
   variant: "v19",
   testEnvironment: "jsdom",
