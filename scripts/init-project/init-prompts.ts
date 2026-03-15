@@ -63,8 +63,8 @@ const FORMATTER_CHOICES: readonly Choice<Formatter>[] = [
 
 const AI_TOOL_CHOICES: readonly Choice<AiTool>[] = [
   { value: "claude", label: "Claude" },
-  { value: "codex", label: "codex" },
-  { value: "gemini", label: "gemini" },
+  { value: "codex", label: "Codex" },
+  { value: "gemini", label: "Gemini" },
 ]
 
 const FEATURE_CHOICES: readonly Choice<InitPromptFeature>[] = [

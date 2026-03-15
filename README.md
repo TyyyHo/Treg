@@ -32,7 +32,7 @@ After `init`, `treg` asks:
 2. Features (default selected: `all`)
 3. Test runner (only when `test` is selected)
 4. Formatter (only when `format` is selected)
-5. AI tools (`Claude|codex|gemini`, multi-select, only when AI skill guidance is selected)
+5. AI tools (`Claude|Codex|Gemini`, multi-select, only when AI skill guidance is selected)
 
 Default `all` includes:
 
@@ -117,8 +117,8 @@ Formatter default:
 
 - AI guidance updates only selected tools' files:
   - `Claude -> CLAUDE.md`
-  - `codex -> AGENTS.md`
-  - `gemini -> GEMINI.md`
+  - `Codex -> AGENTS.md`
+  - `Gemini -> GEMINI.md`
 - Files are updated only if they already exist in repo root.
 - Missing files are skipped and never auto-created.
 - Skill files are generated once per enabled feature.

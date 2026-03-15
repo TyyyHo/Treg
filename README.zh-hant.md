@@ -32,7 +32,7 @@ npx @tyyyho/treg init
 2. 要加入的功能（預設勾選 `all`）
 3. 測試工具（僅在選到 `test` 時詢問）
 4. Formatter（僅在選到 `format` 時詢問）
-5. AI 工具（`Claude|codex|gemini` 可複選，僅在選到 AI skill guidance 時詢問）
+5. AI 工具（`Claude|Codex|Gemini` 可複選，僅在選到 AI skill guidance 時詢問）
 
 預設 `all` 內容：
 
@@ -117,8 +117,8 @@ formatter 預設：
 
 - 只會更新選擇的 AI 工具對應檔案：
   - `Claude -> CLAUDE.md`
-  - `codex -> AGENTS.md`
-  - `gemini -> GEMINI.md`
+  - `Codex -> AGENTS.md`
+  - `Gemini -> GEMINI.md`
 - 僅更新 repo root 已存在的檔案。
 - 不存在的檔案會跳過，不會自動建立。
 - 每個啟用功能的 skill 檔只會建立一次。

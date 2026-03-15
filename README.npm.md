@@ -29,7 +29,7 @@ Commands:
 2. features (default: `all`)
 3. test runner (if `test` is selected)
 4. formatter (if `format` is selected)
-5. ai tools (`Claude|codex|gemini`, multi-select, if AI skill guidance is selected)
+5. ai tools (`Claude|Codex|Gemini`, multi-select, if AI skill guidance is selected)
 
 `add` examples:
 
