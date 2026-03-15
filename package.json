@@ -34,6 +34,7 @@
     "prepublishOnly": "pnpm format:check && pnpm lint:check && pnpm type:check && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
     "mrm-core": "^7.1.22"
   },
   "devDependencies": {
