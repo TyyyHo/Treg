@@ -223,11 +223,7 @@ export async function collectInitPrompts(
   let skills = featureSelection.skills
 
   if (skills) {
-    aiTools = await promptMultiChoice(
-      "5) AI tools",
-      AI_TOOL_CHOICES,
-      DEFAULT_AI_TOOLS
-    )
+    aiTools = await promptMultiChoice("5) AI tools", AI_TOOL_CHOICES, [])
 
     if (aiTools.length === 0) {
       skills = false
