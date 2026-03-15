@@ -109,12 +109,7 @@ runCiValidation()
 ensureCleanWorkingTree()
 
 console.log(`[release] Bumping version with target: ${releaseTarget}`)
-run("npm", [
-  "version",
-  releaseTarget,
-  "-m",
-  "chore: release v%s [skip release ci]",
-])
+run("npm", ["version", releaseTarget, "-m", "chore: release v%s"])
 
 const version = run("node", ["-p", "require('./package.json').version"], {
   captureOutput: true,
