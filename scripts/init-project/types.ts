@@ -46,6 +46,8 @@ export interface ParsedOptions {
   pm: PackageManagerOption | null
   force: boolean
   dryRun: boolean
+  noFormat: boolean
+  noTestRunner: boolean
   skipHuskyInstall: boolean
   skills: boolean
   help: boolean

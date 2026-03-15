@@ -31,6 +31,8 @@ npx @tyyyho/treg <command> [options]
 
 - `--framework <node|react|next|vue|svelte|nuxt>`：可選，手動覆寫 framework
 - `--features <lint,format,typescript,test,husky>`：指定要安裝的 feature（預設全部）
+- `--no-format`：略過 format feature，避免覆寫既有格式化設定與 scripts
+- `--no-test-runner`：略過 test feature，避免覆寫既有測試 runner 與設定
 - `--dir <path>`：指定目標目錄（預設為目前目錄）
 - `--formatter <prettier|oxfmt>`：format feature 使用的 formatter（預設為 `prettier`）
 - `--test-runner <jest|vitest>`：可選，啟用 test feature 時覆寫測試框架
@@ -78,6 +80,12 @@ npx @tyyyho/treg add --features lint,format
 npx @tyyyho/treg add --features format --formatter oxfmt
 ```
 
+若要保留既有設定，可跳過 format/test 安裝：
+
+```bash
+npx @tyyyho/treg add --no-format --no-test-runner
+```
+
 test feature 使用 Vitest：
 
 ```bash
@@ -108,6 +116,7 @@ npx @tyyyho/treg init --framework react --dir ./packages/web
 - 偵測順序：`nuxt -> next -> react -> vue -> svelte -> node`。
 - 預設測試工具為：`vue`/`nuxt` 使用 `vitest`，其他 framework 使用 `jest`。
 - 預設 formatter 為 `prettier`（可用 `--formatter oxfmt` 覆寫）。
+- 可透過 `--no-format` 與 `--no-test-runner` 跳過對 format/test 的設定，避免覆寫既有專案規則。
 - `add` 可只安裝你指定的 features。
 - 每個 framework 僅提供單一穩定設定，不支援 `--framework-version` 版本變體。
 - `--dry-run` 會輸出完整計畫且不寫入任何檔案。

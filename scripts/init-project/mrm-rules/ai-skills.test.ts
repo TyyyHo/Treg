@@ -94,6 +94,8 @@ describe("ai-skills helpers", () => {
         pm: "pnpm",
         force: false,
         dryRun: false,
+        noFormat: false,
+        noTestRunner: false,
         skipHuskyInstall: false,
         skills: true,
         help: false,

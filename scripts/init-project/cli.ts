@@ -46,6 +46,8 @@ Options:
                                       Optional framework override (default: auto-detected)
   --features <lint,format,typescript,test,husky>
                                       Features to install (all selected by default)
+  --no-format                         Skip format feature setup and avoid changing format config/scripts
+  --no-test-runner                    Skip test feature setup and avoid changing test runner/config
   --dir <path>                        Target directory (defaults to current directory)
   --formatter <prettier|oxfmt>        Formatter for format feature (default: prettier)
   --test-runner <jest|vitest>         Optional test runner override (default: vue/nuxt=vitest, others=jest)
@@ -68,6 +70,8 @@ interface RawParsedOptions {
   pm: string | null
   force: boolean
   dryRun: boolean
+  noFormat: boolean
+  noTestRunner: boolean
   skipHuskyInstall: boolean
   skills: boolean
   help: boolean
@@ -115,6 +119,8 @@ export function parseArgs(argv: string[]): ParsedOptions {
     pm: null,
     force: false,
     dryRun: false,
+    noFormat: false,
+    noTestRunner: false,
     skipHuskyInstall: false,
     skills: true,
     help: false,
@@ -171,6 +177,10 @@ export function parseArgs(argv: string[]): ParsedOptions {
       options.force = true
     } else if (arg === "--dry-run") {
       options.dryRun = true
+    } else if (arg === "--no-format") {
+      options.noFormat = true
+    } else if (arg === "--no-test-runner") {
+      options.noTestRunner = true
     } else if (arg === "--skip-husky-install") {
       options.skipHuskyInstall = true
     } else if (arg === "--skills") {
@@ -255,11 +265,17 @@ function validateParsedOptions(
 }
 
 export function resolveFeatures(
-  options: Pick<ParsedOptions, "features">
+  options: Pick<ParsedOptions, "features" | "noFormat" | "noTestRunner">
 ): EnabledFeatures {
   const selected = new Set<FeatureName>(
     options.features.length > 0 ? options.features : ALLOWED_FEATURES
   )
+  if (options.noFormat) {
+    selected.delete("format")
+  }
+  if (options.noTestRunner) {
+    selected.delete("test")
+  }
 
   return {
     lint: selected.has("lint"),
