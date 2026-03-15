@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@jest/globals"
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { __testables__ } from "./ai-skills.ts"
+import { __testables__, runAiSkillsRule } from "./ai-skills.ts"
 
 describe("ai-skills helpers", () => {
   it("builds skill section from enabled features", () => {
@@ -56,15 +56,67 @@ describe("ai-skills helpers", () => {
     expect(replaced).not.toContain("old")
   })
 
-  it("prefers AGENTS.md when both docs exist", () => {
+  it("resolves all supported docs when they exist", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-"))
     try {
-      writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
       writeFileSync(path.join(dir, "CLAUDE.md"), "# Claude\n", "utf8")
+      writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
+      writeFileSync(path.join(dir, "GEMINI.md"), "# Gemini\n", "utf8")
 
-      expect(__testables__.resolveSkillsDoc(dir)).toBe(
-        path.join(dir, "AGENTS.md")
-      )
+      expect(__testables__.resolveSkillsDocs(dir)).toEqual([
+        path.join(dir, "CLAUDE.md"),
+        path.join(dir, "AGENTS.md"),
+        path.join(dir, "GEMINI.md"),
+      ])
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it("injects guidance into each existing doc and writes skills once", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-inject-"))
+    try {
+      writeFileSync(path.join(dir, "CLAUDE.md"), "# Claude\n", "utf8")
+      writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
+      writeFileSync(path.join(dir, "GEMINI.md"), "# Gemini\n", "utf8")
+
+      await runAiSkillsRule({
+        command: "add",
+        projectDir: dir,
+        framework: {
+          id: "node",
+          testEnvironment: "node",
+          tsRequiredExcludes: [],
+        },
+        features: [],
+        testRunner: "jest",
+        pm: "pnpm",
+        force: false,
+        dryRun: false,
+        skipHuskyInstall: false,
+        skills: true,
+        help: false,
+        enabledFeatures: {
+          lint: true,
+          format: false,
+          typescript: false,
+          test: false,
+          husky: false,
+        },
+      })
+
+      const claudeDoc = await readFile(path.join(dir, "CLAUDE.md"), "utf8")
+      const agentsDoc = await readFile(path.join(dir, "AGENTS.md"), "utf8")
+      const geminiDoc = await readFile(path.join(dir, "GEMINI.md"), "utf8")
+      const lintSkillPath = path.join(dir, "skills/lint/SKILL.md")
+
+      expect(claudeDoc).toContain("## treg AI Skills")
+      expect(claudeDoc).toContain("[treg/lint](skills/lint/SKILL.md)")
+      expect(agentsDoc).toContain("## treg AI Skills")
+      expect(geminiDoc).toContain("## treg AI Skills")
+      expect(existsSync(lintSkillPath)).toBe(true)
+      expect(existsSync(path.join(dir, "skills/format/SKILL.md"))).toBe(false)
+      expect(existsSync(path.join(dir, "skills/test/SKILL.md"))).toBe(false)
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

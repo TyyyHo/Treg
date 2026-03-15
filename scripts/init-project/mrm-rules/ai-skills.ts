@@ -13,6 +13,7 @@ const START_MARKER = "<!-- treg:skills:start -->"
 const END_MARKER = "<!-- treg:skills:end -->"
 const SKILL_SECTION_HEADING = "## treg AI Skills"
 const SKILLS_BASE_DIR = "skills"
+const SKILLS_DOC_CANDIDATES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"] as const
 
 interface SkillDefinition {
   name: string
@@ -82,18 +83,10 @@ const FEATURE_STEP_LABELS = {
   typescript: "TypeScript Settings",
 }
 
-function resolveSkillsDoc(projectDir: string): string | null {
-  const agentsPath = path.join(projectDir, "AGENTS.md")
-  if (existsSync(agentsPath)) {
-    return agentsPath
-  }
-
-  const claudePath = path.join(projectDir, "CLAUDE.md")
-  if (existsSync(claudePath)) {
-    return claudePath
-  }
-
-  return null
+function resolveSkillsDocs(projectDir: string): string[] {
+  return SKILLS_DOC_CANDIDATES.map(fileName =>
+    path.join(projectDir, fileName)
+  ).filter(existsSync)
 }
 
 function getEnabledFeatures(enabledFeatures: EnabledFeatures): FeatureName[] {
@@ -229,10 +222,10 @@ function upsertSkillSection(content: string, nextSection: string): string {
 
 export async function runAiSkillsRule(context: RuleContext): Promise<void> {
   const { projectDir, dryRun } = context
-  const targetFile = resolveSkillsDoc(projectDir)
+  const targetFiles = resolveSkillsDocs(projectDir)
 
-  if (!targetFile) {
-    console.log("Skip ai-skills (AGENTS.md/CLAUDE.md not found)")
+  if (targetFiles.length === 0) {
+    console.log("Skip ai-skills (CLAUDE.md/AGENTS.md/GEMINI.md not found)")
     return
   }
 
@@ -240,25 +233,27 @@ export async function runAiSkillsRule(context: RuleContext): Promise<void> {
   await ensureSkillFiles(projectDir, enabled, context.testRunner, dryRun)
 
   const section = buildSkillSection(context)
-  const current = await fs.readFile(targetFile, "utf8")
-  const updated = upsertSkillSection(current, section)
+  for (const targetFile of targetFiles) {
+    if (dryRun) {
+      console.log(
+        `[dry-run] Would update ${path.basename(targetFile)} with AI skill guidance`
+      )
+      continue
+    }
 
-  if (dryRun) {
+    const current = await fs.readFile(targetFile, "utf8")
+    const updated = upsertSkillSection(current, section)
+
+    if (updated !== current) {
+      await fs.writeFile(targetFile, updated, "utf8")
+      console.log(`Updated ${path.basename(targetFile)} with AI skill guidance`)
+      continue
+    }
+
     console.log(
-      `[dry-run] Would update ${path.basename(targetFile)} with AI skill guidance`
+      `${path.basename(targetFile)} already contains latest AI skill guidance`
     )
-    return
   }
-
-  if (updated !== current) {
-    await fs.writeFile(targetFile, updated, "utf8")
-    console.log(`Updated ${path.basename(targetFile)} with AI skill guidance`)
-    return
-  }
-
-  console.log(
-    `${path.basename(targetFile)} already contains latest AI skill guidance`
-  )
 }
 
 export const __testables__ = {
@@ -267,6 +262,6 @@ export const __testables__ = {
   ensureSkillFiles,
   getEnabledFeatures,
   getSkillRelativePath,
-  resolveSkillsDoc,
+  resolveSkillsDocs,
   upsertSkillSection,
 }
