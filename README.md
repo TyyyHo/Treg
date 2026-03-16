@@ -20,7 +20,7 @@
 
 **treg**
 
-It is a CLI tool designed to inject an **"immune system"** into your project.  
+It is a CLI tool designed to inject an **immune system** into your project.  
 When Developer and AI collaborate at high speed, codebases can drift into inconsistency, duplicated rules, and fragile workflows.  
 `treg` plays the role of a regulatory T cell: it helps restore balance, suppress avoidable chaos, and keep the repository **clean, maintainable, and extensible**.
 

@@ -7,12 +7,9 @@ downloads](https://img.shields.io/npm/dm/%40tyyyho%2Ftreg)](https://www.npmjs.co
 [![License](https://img.shields.io/npm/l/%40tyyyho%2Ftreg)](https://www.npmjs.com/package/%40tyyyho%2Ftreg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 
-[繁體中文 README](./README.zh-hant.md)
-
 ## Overview
 
-**treg** is a CLI tool that injects an **engineering
-"immune system"** into your project.
+**treg** is a CLI tool that injects an **engineering immune system** into your project.
 
 When humans and AI collaborate and iterate rapidly, repositories often
 accumulate inconsistent tooling, style drift, and fragile workflows.\
