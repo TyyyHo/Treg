@@ -234,29 +234,6 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 ---
 
-## 發布
-
-發布套件 `@tylercore/treg`：
-
-```bash
-npm run release -- patch
-```
-
-支援目標：
-
-```text
-patch
-minor
-major
-prepatch
-preminor
-premajor
-prerelease
-x.y.z
-```
-
----
-
 <div align="center">
   <sub>Built to regulate chaotic iteration and protect long-term codebase health.</sub>
   <br />

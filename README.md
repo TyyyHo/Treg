@@ -234,29 +234,6 @@ It exists to establish the engineering immune layer that keeps rapid iteration f
 
 ---
 
-## Release
-
-Release package `@tylercore/treg`:
-
-```bash
-npm run release -- patch
-```
-
-Supported targets:
-
-```text
-patch
-minor
-major
-prepatch
-preminor
-premajor
-prerelease
-x.y.z
-```
-
----
-
 <div align="center">
   <sub>Built to regulate chaotic iteration and protect long-term codebase health.</sub>
   <br />
