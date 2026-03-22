@@ -79,4 +79,16 @@ jobs:
           fi
 
       - name: Publish to npm (Trusted publishing)
-        run: npm publish --registry https://registry.npmjs.org --access public --provenance --ignore-scripts
+        run: |
+          set +e
+          npm publish --registry https://registry.npmjs.org --access public --provenance --ignore-scripts
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "Publish failed."
+            echo "If error is ENEEDAUTH, configure npm Trusted Publisher for @tylercore/treg:"
+            echo "- Provider: GitHub Actions"
+            echo "- Repository: tylercore/treg"
+            echo "- Workflow file: .github/workflows/publish.yml"
+            echo "- Trigger: tags matching v*"
+            exit $status
+          fi
