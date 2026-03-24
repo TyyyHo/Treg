@@ -2,10 +2,28 @@
   "name": "@tylercore/treg",
   "version": "1.0.7",
   "description": "Treg is a CLI tool that injects an engineering immune system into existing projects.",
+  "keywords": [
+    "treg",
+    "cli",
+    "tooling",
+    "infrastructure",
+    "project-setup",
+    "code-quality",
+    "lint",
+    "formatting",
+    "typescript",
+    "testing",
+    "ai-rules"
+  ],
+  "author": "tylercore <ty.ho1126@gmail.com>",
   "license": "MIT",
+  "homepage": "https://github.com/tylercore/treg#readme",
+  "bugs": {
+    "url": "https://github.com/tylercore/treg/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tylercore/treg.git"
+    "url": "https://github.com/tylercore/treg.git"
   },
   "bin": {
     "treg": "dist/init-project.js"
