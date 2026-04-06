@@ -62,7 +62,7 @@ interface RawParsedOptions {
   force: boolean
   dryRun: boolean
   skipHuskyInstall: boolean
-  skills: boolean
+  aiRules: boolean
   aiTools: AiTool[]
   help: boolean
 }
@@ -105,7 +105,7 @@ export function parseArgs(argv: string[]): ParsedOptions {
     force: false,
     dryRun: false,
     skipHuskyInstall: false,
-    skills: true,
+    aiRules: true,
     aiTools: [...DEFAULT_AI_TOOLS],
     help: false,
   }

@@ -8,7 +8,7 @@ import { runTypescriptRule } from "./typescript.ts"
 import type { RuleContext } from "../types.ts"
 
 export async function runFeatureRules(context: RuleContext): Promise<void> {
-  const { enabledFeatures, skills, testRunner } = context
+  const { enabledFeatures, aiRules, testRunner } = context
 
   if (enabledFeatures.format) {
     await runFormatRule(context)
@@ -30,7 +30,7 @@ export async function runFeatureRules(context: RuleContext): Promise<void> {
     await runHuskyRule(context)
   }
 
-  if (skills) {
+  if (aiRules) {
     await runAiRulesRule(context)
   }
 }

@@ -220,7 +220,7 @@ nuxt -> next -> react -> vue -> svelte -> node
 - 只更新你選擇的工具
 - 缺少的對應文件會自動建立
 - 更新發生在 repository root
-- 每個啟用 feature 的 skill 檔只會生成一次
+- 提示內容會直接寫入每個選定的 AI 說明文件
 
 ---
 

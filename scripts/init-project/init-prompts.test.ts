@@ -4,7 +4,7 @@ import { __testables__ } from "./init-prompts.ts"
 describe("init prompts helpers", () => {
   it("maps selected features and AI rules toggle", () => {
     expect(
-      __testables__.toFeatureSelection(["lint", "test", "skills"])
+      __testables__.toFeatureSelection(["lint", "test", "aiRules"])
     ).toEqual({
       enabledFeatures: {
         lint: true,
@@ -13,7 +13,7 @@ describe("init prompts helpers", () => {
         test: true,
         husky: false,
       },
-      skills: true,
+      aiRules: true,
     })
   })
 
@@ -26,7 +26,7 @@ describe("init prompts helpers", () => {
         test: false,
         husky: false,
       },
-      skills: false,
+      aiRules: false,
     })
   })
 
@@ -34,21 +34,21 @@ describe("init prompts helpers", () => {
     expect(
       __testables__.resolveAiToolSelection(["claude", "codex", "gemini"])
     ).toEqual({
-      skills: true,
+      aiRules: true,
       aiTools: ["claude", "codex", "gemini"],
     })
   })
 
   it("disables AI rules when skip is selected", () => {
     expect(__testables__.resolveAiToolSelection(["skip"])).toEqual({
-      skills: false,
+      aiRules: false,
       aiTools: [],
     })
 
     expect(
       __testables__.resolveAiToolSelection(["claude", "skip", "gemini"])
     ).toEqual({
-      skills: false,
+      aiRules: false,
       aiTools: [],
     })
   })
