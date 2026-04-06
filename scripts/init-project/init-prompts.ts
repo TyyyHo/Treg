@@ -10,7 +10,7 @@ import type {
 
 const DEFAULT_AI_TOOLS: readonly AiTool[] = ["claude", "codex", "gemini"]
 
-type InitPromptFeature = FeatureName | "skills"
+type InitPromptFeature = FeatureName | "aiRules"
 type AiToolChoice = AiTool | "skip"
 type ClackPrompts = typeof import("@clack/prompts")
 
@@ -21,7 +21,7 @@ interface Choice<T extends string> {
 
 interface InitFeatureSelection {
   enabledFeatures: EnabledFeatures
-  skills: boolean
+  aiRules: boolean
 }
 
 export interface InitPromptResult {
@@ -29,7 +29,7 @@ export interface InitPromptResult {
   formatter: Formatter
   testRunner: TestRunner
   enabledFeatures: EnabledFeatures
-  skills: boolean
+  aiRules: boolean
   aiTools: AiTool[]
 }
 
@@ -72,7 +72,7 @@ const FEATURE_CHOICES: readonly Choice<InitPromptFeature>[] = [
   { value: "typescript", label: "TypeScript" },
   { value: "test", label: "test" },
   { value: "husky", label: "husky" },
-  { value: "skills", label: "AI rules guidance" },
+  { value: "aiRules", label: "AI rules guidance" },
 ]
 
 let promptsModulePromise: Promise<ClackPrompts> | null = null
@@ -88,7 +88,7 @@ function toFeatureSelection(
       test: selected.includes("test"),
       husky: selected.includes("husky"),
     },
-    skills: selected.includes("skills"),
+    aiRules: selected.includes("aiRules"),
   }
 }
 
@@ -136,18 +136,18 @@ async function promptSingleChoice<T extends string>(
 }
 
 function resolveAiToolSelection(selected: readonly AiToolChoice[]): {
-  skills: boolean
+  aiRules: boolean
   aiTools: AiTool[]
 } {
   if (selected.includes("skip")) {
     return {
-      skills: false,
+      aiRules: false,
       aiTools: [],
     }
   }
 
   return {
-    skills: selected.length > 0,
+    aiRules: selected.length > 0,
     aiTools: selected as AiTool[],
   }
 }
@@ -188,7 +188,7 @@ export async function collectInitPrompts(
         test: true,
         husky: true,
       },
-      skills: true,
+      aiRules: true,
       aiTools: [...DEFAULT_AI_TOOLS],
     }
   }
@@ -240,9 +240,9 @@ export async function collectInitPrompts(
   }
 
   let aiTools: AiTool[] = []
-  let skills = featureSelection.skills
+  let aiRules = featureSelection.aiRules
 
-  if (skills) {
+  if (aiRules) {
     const aiToolAnswers = await promptMultiChoice(
       "5) AI tools (Space to select, A to toggle all)",
       AI_TOOL_CHOICES,
@@ -250,9 +250,9 @@ export async function collectInitPrompts(
       true
     )
     const aiToolSelection = resolveAiToolSelection(aiToolAnswers)
-    skills = aiToolSelection.skills
+    aiRules = aiToolSelection.aiRules
     aiTools = aiToolSelection.aiTools
-    if (!skills) {
+    if (!aiRules) {
       console.log("AI rules guidance disabled by selection: skip")
     }
   } else {
@@ -264,7 +264,7 @@ export async function collectInitPrompts(
     formatter,
     testRunner,
     enabledFeatures,
-    skills,
+    aiRules,
     aiTools,
   }
 }

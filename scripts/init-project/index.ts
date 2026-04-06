@@ -55,7 +55,7 @@ export async function main(
   let formatter = options.formatter
   let testRunner = resolveTestRunner(framework.id, options.testRunner)
   let enabledFeatures = resolveFeatures(options)
-  let skills = options.skills
+  let aiRules = options.aiRules
   let aiTools = [...options.aiTools]
 
   if (options.command === "init") {
@@ -68,7 +68,7 @@ export async function main(
     formatter = prompted.formatter
     testRunner = prompted.testRunner
     enabledFeatures = prompted.enabledFeatures
-    skills = prompted.skills
+    aiRules = prompted.aiRules
     aiTools = prompted.aiTools
   }
 
@@ -80,7 +80,7 @@ export async function main(
     pm,
     framework,
     enabledFeatures,
-    skills,
+    aiRules,
     aiTools,
   }
 
@@ -93,7 +93,7 @@ export async function main(
       .map(([name]) => name)
       .join(
         ", "
-      )}, formatter=${formatter}, testRunner=${testRunner}, aiTools=${skills ? aiTools.join(", ") : "disabled"}`
+      )}, formatter=${formatter}, testRunner=${testRunner}, aiTools=${aiRules ? aiTools.join(", ") : "disabled"}`
   )
 
   console.log(formatStep(2, TOTAL_STEPS, "Run mrm rules", options.dryRun))

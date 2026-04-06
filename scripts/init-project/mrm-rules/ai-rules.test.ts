@@ -7,8 +7,8 @@ import { readFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 
 describe("ai-rules helpers", () => {
-  it("builds rule section from enabled features", () => {
-    const content = __testables__.buildSkillSection({
+  it("builds direct prompt section from enabled features", () => {
+    const content = __testables__.buildRuleSection({
       enabledFeatures: {
         lint: true,
         format: true,
@@ -19,31 +19,26 @@ describe("ai-rules helpers", () => {
       testRunner: "vitest",
     })
 
-    expect(content).toContain("## Treg Rules")
     expect(content).toContain("### Git rules")
     expect(content).toContain("1. Never use --no-verify")
     expect(content).toContain(
       "2. Unless the user asks, never relax TypeScript, lint, or format constraints, and never skip tests."
     )
-    expect(content).toContain("### Steps and Rule Mapping")
-    expect(content).toContain(
-      "1. Formatting: use [format](skills/format/SKILL.md)"
-    )
-    expect(content).toContain(
-      "2. Lint Validation: use [lint](skills/lint/SKILL.md)"
-    )
-    expect(content).toContain(
-      "3. Test Configuration: use [test](skills/test/SKILL.md)"
-    )
+    expect(content).toContain("### Validation Rules and Checklist")
+    expect(content).toContain("1. Formatting")
+    expect(content).toContain("2. Lint Validation")
+    expect(content).toContain("3. Test Configuration")
+    expect(content).toContain("Prompt: Apply and verify formatting rule.")
+    expect(content).toContain("Prompt: Run and validate lint rule.")
     expect(content).toContain("Current test runner: `vitest`")
-    expect(content).not.toContain("TypeScript Settings")
-    expect(content).not.toContain("<!-- treg:skills:")
+    expect(content).not.toContain("skills/")
+    expect(content).not.toContain("SKILL.md")
   })
 
   it("appends rule section when no existing section is present", () => {
-    const replaced = __testables__.upsertSkillSection(
+    const replaced = __testables__.upsertRuleSection(
       "# Header\n\nSome existing content.",
-      "## Treg Rules\n\nnew"
+      "### Git rules\n\nnew"
     )
 
     expect(replaced).toContain("# Header")
@@ -51,26 +46,26 @@ describe("ai-rules helpers", () => {
     expect(replaced).toContain("Some existing content.")
   })
 
-  it("upserts an existing rule section without markers", () => {
-    const replaced = __testables__.upsertSkillSection(
+  it("does not replace legacy header sections", () => {
+    const replaced = __testables__.upsertRuleSection(
       "# Header\n\n## Treg AI Skills\n\nold\n\n## Other\n\nkeep",
-      "## Treg Rules\n\nnew"
+      "### Git rules\n\nnew"
     )
 
-    expect(replaced).toContain("## Treg Rules\n\nnew")
+    expect(replaced).toContain("### Git rules\n\nnew")
     expect(replaced).toContain("## Other\n\nkeep")
-    expect(replaced).not.toContain("old")
+    expect(replaced).toContain("old")
   })
 
   it("resolves all supported docs when they exist", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-"))
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-"))
     try {
       writeFileSync(path.join(dir, "CLAUDE.md"), "# Claude\n", "utf8")
       writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
       writeFileSync(path.join(dir, "GEMINI.md"), "# Gemini\n", "utf8")
 
       expect(
-        __testables__.resolveSkillsDocs(dir, ["claude", "codex", "gemini"])
+        __testables__.resolveAiRulesDocs(dir, ["claude", "codex", "gemini"])
       ).toEqual([
         path.join(dir, "CLAUDE.md"),
         path.join(dir, "AGENTS.md"),
@@ -82,18 +77,18 @@ describe("ai-rules helpers", () => {
   })
 
   it("resolves selected docs even when files are missing", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-missing-"))
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-missing-"))
     try {
-      expect(__testables__.resolveSkillsDocs(dir, ["codex", "gemini"])).toEqual(
-        [path.join(dir, "AGENTS.md"), path.join(dir, "GEMINI.md")]
-      )
+      expect(
+        __testables__.resolveAiRulesDocs(dir, ["codex", "gemini"])
+      ).toEqual([path.join(dir, "AGENTS.md"), path.join(dir, "GEMINI.md")])
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
   })
 
-  it("injects guidance into each existing doc and writes skills once", async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-inject-"))
+  it("injects direct guidance into each selected doc without skill files", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-inject-"))
     try {
       writeFileSync(path.join(dir, "CLAUDE.md"), "# Claude\n", "utf8")
       writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
@@ -114,7 +109,7 @@ describe("ai-rules helpers", () => {
         force: false,
         dryRun: false,
         skipHuskyInstall: false,
-        skills: true,
+        aiRules: true,
         aiTools: ["claude", "codex", "gemini"],
         help: false,
         enabledFeatures: {
@@ -129,22 +124,19 @@ describe("ai-rules helpers", () => {
       const claudeDoc = await readFile(path.join(dir, "CLAUDE.md"), "utf8")
       const agentsDoc = await readFile(path.join(dir, "AGENTS.md"), "utf8")
       const geminiDoc = await readFile(path.join(dir, "GEMINI.md"), "utf8")
-      const lintSkillPath = path.join(dir, "skills/lint/SKILL.md")
 
-      expect(claudeDoc).toContain("## Treg Rules")
-      expect(claudeDoc).toContain("[lint](skills/lint/SKILL.md)")
-      expect(agentsDoc).toContain("## Treg Rules")
-      expect(geminiDoc).toContain("## Treg Rules")
-      expect(existsSync(lintSkillPath)).toBe(true)
-      expect(existsSync(path.join(dir, "skills/format/SKILL.md"))).toBe(false)
-      expect(existsSync(path.join(dir, "skills/test/SKILL.md"))).toBe(false)
+      expect(claudeDoc).toContain("### Git rules")
+      expect(claudeDoc).toContain("Prompt: Run and validate lint rule.")
+      expect(agentsDoc).toContain("### Git rules")
+      expect(geminiDoc).toContain("### Git rules")
+      expect(existsSync(path.join(dir, "skills"))).toBe(false)
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
   })
 
   it("injects guidance only for selected ai tools", async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-selective-"))
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-selective-"))
     try {
       writeFileSync(path.join(dir, "CLAUDE.md"), "# Claude\n", "utf8")
       writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
@@ -165,7 +157,7 @@ describe("ai-rules helpers", () => {
         force: false,
         dryRun: false,
         skipHuskyInstall: false,
-        skills: true,
+        aiRules: true,
         aiTools: ["codex"],
         help: false,
         enabledFeatures: {
@@ -181,16 +173,16 @@ describe("ai-rules helpers", () => {
       const agentsDoc = await readFile(path.join(dir, "AGENTS.md"), "utf8")
       const geminiDoc = await readFile(path.join(dir, "GEMINI.md"), "utf8")
 
-      expect(claudeDoc).not.toContain("## Treg Rules")
-      expect(agentsDoc).toContain("## Treg Rules")
-      expect(geminiDoc).not.toContain("## Treg Rules")
+      expect(claudeDoc).not.toContain("### Git rules")
+      expect(agentsDoc).toContain("### Git rules")
+      expect(geminiDoc).not.toContain("### Git rules")
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
   })
 
   it("creates missing selected ai docs and injects guidance", async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-create-docs-"))
+    const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-create-docs-"))
     try {
       await runAiRulesRule({
         command: "add",
@@ -207,7 +199,7 @@ describe("ai-rules helpers", () => {
         force: false,
         dryRun: false,
         skipHuskyInstall: false,
-        skills: true,
+        aiRules: true,
         aiTools: ["codex", "gemini"],
         help: false,
         enabledFeatures: {
@@ -223,52 +215,10 @@ describe("ai-rules helpers", () => {
       const geminiDoc = await readFile(path.join(dir, "GEMINI.md"), "utf8")
 
       expect(agentsDoc).not.toContain("# AGENTS")
-      expect(agentsDoc).toContain("## Treg Rules")
+      expect(agentsDoc).toContain("### Git rules")
       expect(geminiDoc).not.toContain("# GEMINI")
-      expect(geminiDoc).toContain("## Treg Rules")
+      expect(geminiDoc).toContain("### Git rules")
       expect(existsSync(path.join(dir, "CLAUDE.md"))).toBe(false)
-    } finally {
-      rmSync(dir, { recursive: true, force: true })
-    }
-  })
-
-  it("builds rule file content with frontmatter", () => {
-    const content = __testables__.buildSkillFile(
-      "test",
-      {
-        name: "test",
-        description: "Apply and verify test runner rule.",
-        when: "When test rules are added or test configuration changes.",
-        checklist: [
-          "Confirm the selected test runner matches the project setup.",
-          "Run `test`.",
-        ],
-      },
-      "vitest"
-    )
-
-    expect(content).toContain("name: test")
-    expect(content).toContain("description: Apply and verify test runner rule.")
-    expect(content).toContain("## Current Test Runner")
-    expect(content).toContain("`vitest`")
-  })
-
-  it("creates skill files for enabled features", async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "treg-skill-files-"))
-    try {
-      await __testables__.ensureSkillFiles(dir, ["lint", "test"], "jest", false)
-
-      const lintSkill = await readFile(
-        path.join(dir, "skills/lint/SKILL.md"),
-        "utf8"
-      )
-      const testSkill = await readFile(
-        path.join(dir, "skills/test/SKILL.md"),
-        "utf8"
-      )
-
-      expect(lintSkill).toContain("name: lint")
-      expect(testSkill).toContain("## Current Test Runner")
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

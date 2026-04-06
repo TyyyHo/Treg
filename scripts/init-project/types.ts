@@ -46,7 +46,7 @@ export interface ParsedOptions {
   force: boolean
   dryRun: boolean
   skipHuskyInstall: boolean
-  skills: boolean
+  aiRules: boolean
   aiTools: AiTool[]
   help: boolean
 }

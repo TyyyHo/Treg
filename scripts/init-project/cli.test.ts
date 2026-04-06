@@ -30,7 +30,7 @@ describe("parseArgs", () => {
       force: true,
       dryRun: true,
       skipHuskyInstall: true,
-      skills: true,
+      aiRules: true,
       aiTools: ["claude", "codex", "gemini"],
       help: false,
     })

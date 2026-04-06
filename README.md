@@ -221,7 +221,7 @@ Behavior:
 - only selected tools are updated
 - selected docs are created automatically when missing
 - updates happen in the repository root
-- skill files are generated once per enabled feature
+- prompts are written directly inside each selected AI guidance document
 
 ---
 
