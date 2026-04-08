@@ -18,6 +18,16 @@ on:
         required: false
         type: boolean
         default: true
+      upload-dist-artifact:
+        description: Whether to upload dist as an artifact after build.
+        required: false
+        type: boolean
+        default: false
+      download-dist-artifact:
+        description: Whether to download dist artifact before smoke test.
+        required: false
+        type: boolean
+        default: false
       run-smoke-test:
         description: Whether to run CLI dry-run smoke test.
         required: false
@@ -64,13 +74,32 @@ jobs:
         if: ${{ inputs.run-build }}
         run: pnpm build
 
+      - name: Upload dist artifact
+        if: ${{ inputs.upload-dist-artifact }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: treg-dist
+          path: dist
+          if-no-files-found: error
+
       - name: Run tests
         if: ${{ inputs.run-checks }}
         run: pnpm test
 
+      - name: Download dist artifact
+        if: ${{ inputs.download-dist-artifact }}
+        uses: actions/download-artifact@v4
+        with:
+          name: treg-dist
+          path: dist
+
       - name: CLI smoke test (dry run)
         if: ${{ inputs.run-smoke-test }}
         run: |
+          if [ ! -f "$GITHUB_WORKSPACE/dist/init-project.js" ]; then
+            echo "Missing dist/init-project.js before smoke test."
+            exit 1
+          fi
           tmpdir="$(mktemp -d)"
           cat > "$tmpdir/package.json" <<'JSON'
           { "name": "ci-smoke", "version": "1.0.0" }

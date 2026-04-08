@@ -13,6 +13,8 @@ jobs:
       node-version: "20"
       run-checks: true
       run-build: true
+      upload-dist-artifact: true
+      download-dist-artifact: false
       run-smoke-test: false
 
   smoke-test:
@@ -27,4 +29,6 @@ jobs:
       node-version: ${{ matrix.node-version }}
       run-checks: false
       run-build: false
+      upload-dist-artifact: false
+      download-dist-artifact: true
       run-smoke-test: true
