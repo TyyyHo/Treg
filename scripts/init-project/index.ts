@@ -2,18 +2,21 @@ import { existsSync } from "node:fs"
 import { promises as fs } from "node:fs"
 import path from "node:path"
 import {
+  isFeatureName,
   parseArgs,
   printSupportedTargets,
   resolveFeatures,
+  resolveFeatureNames,
   resolveTestRunner,
   USAGE,
 } from "./cli.ts"
 import { resolveFramework } from "./frameworks/index.ts"
-import { collectAddPrompts, collectInitPrompts } from "./init-prompts.ts"
+import { resolvePackagePresetId } from "./frameworks/packages.ts"
+import { collectInitPrompts, collectSetupPrompts } from "./init-prompts.ts"
 import { runFeatureRules } from "./mrm-rules/index.ts"
 import { detectPackageManager, runScript } from "./package-manager.ts"
 import { formatStep } from "./utils.ts"
-import type { PackageJson, ParsedOptions, RuleContext } from "./types.ts"
+import type { FeatureName, PackageJson, ParsedOptions, RuleContext } from "./types.ts"
 
 const TOTAL_STEPS = 3
 
@@ -71,18 +74,43 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     selectedPackageIds = prompted.selectedPackageIds
   }
 
-  if (options.command === "add" && options.features.length === 0) {
-    const prompted = await collectAddPrompts({
-      projectDir,
+  if (options.command === "setup") {
+    const prompted = await collectSetupPrompts({
+      frameworkId: framework.id,
+      pm,
       formatter,
-      testRunner,
+      testRunner: resolveTestRunner(framework.id, null),
     })
+    pm = prompted.pm
     formatter = prompted.formatter
     testRunner = prompted.testRunner
     enabledFeatures = prompted.enabledFeatures
     aiRules = prompted.aiRules
     aiTools = prompted.aiTools
-    selectedPackageIds = []
+    selectedPackageIds = prompted.selectedPackageIds
+  }
+
+  if (options.command === "add") {
+    const target = options.addTarget
+    if (!target) {
+      console.error("Missing add target. Usage: treg add <feature|package>")
+      process.exitCode = 1
+      return
+    }
+
+    if (isFeatureName(target)) {
+      enabledFeatures = resolveFeatureNames([target as FeatureName])
+      selectedPackageIds = []
+    } else {
+      const packagePresetId = resolvePackagePresetId(framework.id, target)
+      if (!packagePresetId) {
+        console.error(`Unsupported add target for ${framework.id}: ${target}`)
+        process.exitCode = 1
+        return
+      }
+      enabledFeatures = resolveFeatureNames([])
+      selectedPackageIds = [packagePresetId]
+    }
   }
 
   const context: RuleContext = {

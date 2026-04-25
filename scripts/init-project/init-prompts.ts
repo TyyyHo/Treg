@@ -11,7 +11,7 @@ import type {
   PackagePresetId,
   TestRunner,
 } from "./types.ts"
-import { getPackagePresets } from "./frameworks/packages.ts"
+import { getDefaultPackagePresetIds, getPackagePresets } from "./frameworks/packages.ts"
 
 const DEFAULT_AI_TOOLS: readonly AiTool[] = ["claude", "codex", "gemini"]
 const AI_TOOL_DOCS: Record<AiTool, string> = {
@@ -52,20 +52,6 @@ interface InitPromptDefaults {
   testRunner: TestRunner
 }
 
-export interface AddPromptResult {
-  formatter: Formatter
-  testRunner: TestRunner
-  enabledFeatures: EnabledFeatures
-  aiRules: boolean
-  aiTools: AiTool[]
-}
-
-interface AddPromptDefaults {
-  projectDir: string
-  formatter: Formatter
-  testRunner: TestRunner
-}
-
 const PACKAGE_MANAGER_CHOICES: readonly Choice<PackageManager>[] = [
   { value: "pnpm", label: "pnpm" },
   { value: "npm", label: "npm" },
@@ -94,8 +80,8 @@ const AI_TOOL_CHOICES: readonly Choice<AiToolChoice>[] = [
 ]
 
 const PACKAGE_INSTALL_CHOICES: readonly Choice<PackageInstallChoice>[] = [
-  { value: "no", label: "No" },
   { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
 ]
 
 const FEATURE_CHOICES: readonly Choice<InitPromptFeature>[] = [
@@ -207,27 +193,59 @@ async function promptMultiChoice<T extends string>(
   return unwrapPromptResult(result, prompts).map((choice) => choice.value)
 }
 
+function getDefaultEnabledFeatures(): EnabledFeatures {
+  return {
+    lint: true,
+    format: true,
+    typescript: true,
+    test: true,
+    husky: true,
+  }
+}
+
 export async function collectInitPrompts(defaults: InitPromptDefaults): Promise<InitPromptResult> {
+  const defaultPackageIds = getDefaultPackagePresetIds(defaults.frameworkId)
+  let selectedPackageIds: PackagePresetId[] = []
+
   if (!input.isTTY || !output.isTTY) {
     console.log("Non-interactive shell detected. Use init defaults.")
+    selectedPackageIds = defaultPackageIds
+  } else {
+    console.log("\nInit setup")
+    const shouldInstallPackages = await promptSingleChoice(
+      "1) Install default packages",
+      PACKAGE_INSTALL_CHOICES,
+      "yes"
+    )
+    selectedPackageIds = shouldInstallPackages === "yes" ? defaultPackageIds : []
+  }
+
+  return {
+    pm: defaults.pm,
+    formatter: defaults.formatter,
+    testRunner: defaults.testRunner,
+    enabledFeatures: getDefaultEnabledFeatures(),
+    aiRules: true,
+    aiTools: [...DEFAULT_AI_TOOLS],
+    selectedPackageIds,
+  }
+}
+
+export async function collectSetupPrompts(defaults: InitPromptDefaults): Promise<InitPromptResult> {
+  if (!input.isTTY || !output.isTTY) {
+    console.log("Non-interactive shell detected. Use setup defaults.")
     return {
       pm: defaults.pm,
       formatter: defaults.formatter,
       testRunner: defaults.testRunner,
-      enabledFeatures: {
-        lint: true,
-        format: true,
-        typescript: true,
-        test: true,
-        husky: true,
-      },
+      enabledFeatures: getDefaultEnabledFeatures(),
       aiRules: true,
       aiTools: [...DEFAULT_AI_TOOLS],
       selectedPackageIds: [],
     }
   }
 
-  console.log("\nInit setup")
+  console.log("\nSetup")
 
   const pm = await promptSingleChoice("1) Package manager", PACKAGE_MANAGER_CHOICES, defaults.pm)
 
@@ -287,23 +305,18 @@ export async function collectInitPrompts(defaults: InitPromptDefaults): Promise<
 
   let selectedPackageIds: PackagePresetId[] = []
   const shouldInstallPackages = await promptSingleChoice(
-    "6) Install common packages",
+    "6) Install packages",
     PACKAGE_INSTALL_CHOICES,
-    "no"
+    "yes"
   )
   if (shouldInstallPackages === "yes") {
     const packageChoices = getPackagePresets(defaults.frameworkId).map((preset) => ({
       value: preset.id,
       label: `${preset.label} - ${preset.description}`,
     }))
-    selectedPackageIds = await promptMultiChoice(
-      "7) Common packages (Space to select, A to toggle all)",
-      packageChoices,
-      [],
-      true
-    )
+    selectedPackageIds = await promptMultiChoice("7) Packages", packageChoices, [])
   } else {
-    console.log("7) Common packages skipped")
+    console.log("7) Packages skipped")
   }
 
   return {
@@ -314,97 +327,6 @@ export async function collectInitPrompts(defaults: InitPromptDefaults): Promise<
     aiRules,
     aiTools,
     selectedPackageIds,
-  }
-}
-
-export async function collectAddPrompts(defaults: AddPromptDefaults): Promise<AddPromptResult> {
-  const defaultAiTools = resolveExistingAiTools(defaults.projectDir)
-
-  if (!input.isTTY || !output.isTTY) {
-    console.log("Non-interactive shell detected. Use add defaults.")
-    return {
-      formatter: defaults.formatter,
-      testRunner: defaults.testRunner,
-      enabledFeatures: {
-        lint: true,
-        format: true,
-        typescript: true,
-        test: true,
-        husky: true,
-      },
-      aiRules: defaultAiTools.length > 0,
-      aiTools: defaultAiTools,
-    }
-  }
-
-  console.log("\nAdd setup")
-
-  const featureChoices =
-    defaultAiTools.length > 0
-      ? FEATURE_CHOICES
-      : FEATURE_CHOICES.filter((choice) => choice.value !== "aiRules")
-  const featureAnswers = await promptMultiChoice("1) Features", featureChoices, [], true)
-  const featureSelection = toFeatureSelection(featureAnswers)
-
-  let formatter = defaults.formatter
-  if (featureSelection.enabledFeatures.format) {
-    formatter = await promptSingleChoice("2) Formatter", FORMATTER_CHOICES, defaults.formatter)
-  } else {
-    console.log("2) Formatter skipped (format feature not selected)")
-  }
-
-  let testRunner = defaults.testRunner
-  const enabledFeatures = { ...featureSelection.enabledFeatures }
-  if (featureSelection.enabledFeatures.test) {
-    const selectedTestRunner = await promptSingleChoice(
-      "3) Test runner",
-      TEST_RUNNER_CHOICES,
-      defaults.testRunner
-    )
-
-    if (selectedTestRunner === "skip") {
-      enabledFeatures.test = false
-      console.log("Test feature disabled by selection: skip")
-    } else {
-      testRunner = selectedTestRunner
-    }
-  } else {
-    console.log("3) Test runner skipped (test feature not selected)")
-  }
-
-  let aiTools: AiTool[] = []
-  let aiRules = featureSelection.aiRules
-
-  if (aiRules) {
-    const aiToolChoices = AI_TOOL_CHOICES.filter(
-      (choice) => choice.value === "skip" || defaultAiTools.includes(choice.value)
-    )
-    const aiToolAnswers = await promptMultiChoice(
-      "4) AI tools (Space to select, A to toggle all)",
-      aiToolChoices,
-      defaultAiTools,
-      true
-    )
-    const aiToolSelection = resolveAiToolSelection(aiToolAnswers)
-    aiRules = aiToolSelection.aiRules
-    aiTools = aiToolSelection.aiTools
-    if (!aiRules) {
-      console.log("AI rules guidance disabled by selection: skip")
-    }
-  } else {
-    console.log(
-      defaultAiTools.length > 0
-        ? "4) AI tools skipped (AI rules guidance not selected)"
-        : "4) AI tools skipped (no AI rules files found)"
-    )
-  }
-
-  return {
-    formatter,
-    testRunner,
-    enabledFeatures,
-    aiRules,
-    aiTools,
   }
 }
 

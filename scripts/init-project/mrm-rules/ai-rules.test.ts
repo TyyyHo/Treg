@@ -118,7 +118,6 @@ describe("ai-rules helpers", () => {
 
       expect(
         __testables__.resolveAiRulesDocs({
-          command: "add",
           projectDir: dir,
           aiTools: ["claude", "codex", "gemini"],
         })
@@ -132,17 +131,16 @@ describe("ai-rules helpers", () => {
     }
   })
 
-  it("add resolves only existing selected docs", () => {
+  it("resolves selected docs even when files are missing", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-missing-"))
     try {
       writeFileSync(path.join(dir, "AGENTS.md"), "# Agents\n", "utf8")
       expect(
         __testables__.resolveAiRulesDocs({
-          command: "add",
           projectDir: dir,
           aiTools: ["codex", "gemini"],
         })
-      ).toEqual([path.join(dir, "AGENTS.md")])
+      ).toEqual([path.join(dir, "AGENTS.md"), path.join(dir, "GEMINI.md")])
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -153,7 +151,6 @@ describe("ai-rules helpers", () => {
     try {
       expect(
         __testables__.resolveAiRulesDocs({
-          command: "init",
           projectDir: dir,
           aiTools: ["codex", "gemini"],
         })
@@ -179,6 +176,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: [],
         testRunner: "jest",
         pm: "pnpm",
@@ -228,6 +226,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: [],
         testRunner: "jest",
         pm: "pnpm",
@@ -259,7 +258,7 @@ describe("ai-rules helpers", () => {
     }
   })
 
-  it("add does not create missing selected ai docs", async () => {
+  it("add creates missing selected ai docs", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "treg-ai-rules-create-docs-"))
     try {
       await runAiRulesRule({
@@ -271,6 +270,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: [],
         testRunner: "jest",
         pm: "pnpm",
@@ -290,8 +290,8 @@ describe("ai-rules helpers", () => {
         },
       })
 
-      expect(existsSync(path.join(dir, "AGENTS.md"))).toBe(false)
-      expect(existsSync(path.join(dir, "GEMINI.md"))).toBe(false)
+      expect(existsSync(path.join(dir, "AGENTS.md"))).toBe(true)
+      expect(existsSync(path.join(dir, "GEMINI.md"))).toBe(true)
       expect(existsSync(path.join(dir, "CLAUDE.md"))).toBe(false)
     } finally {
       rmSync(dir, { recursive: true, force: true })
@@ -310,6 +310,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: [],
         testRunner: "jest",
         pm: "pnpm",
@@ -356,6 +357,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: ["test"],
         testRunner: "jest",
         pm: "pnpm",
@@ -384,6 +386,7 @@ describe("ai-rules helpers", () => {
           tsRequiredExcludes: [],
         },
         formatter: "prettier",
+        addTarget: null,
         features: ["format"],
         testRunner: "vitest",
         pm: "pnpm",

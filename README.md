@@ -65,7 +65,7 @@ This keeps the project stable without forcing application-level architecture dec
 
 ## Quick Start
 
-Initialize interactively:
+Initialize with auto-detected defaults:
 
 ```bash
 npx @tylercore/treg init
@@ -77,10 +77,17 @@ Preview changes only:
 npx @tylercore/treg init --dry-run
 ```
 
-Add features to an existing project:
+Customize the setup interactively:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
+```
+
+Add one feature or package preset to an existing project:
+
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
 ```
 
 ---
@@ -89,15 +96,36 @@ npx @tylercore/treg add
 
 | Command | Description                                                       |
 | ------- | ----------------------------------------------------------------- |
-| `init`  | Initialize the project with an interactive setup flow             |
-| `add`   | Add selected features to an existing project                      |
+| `init`  | Auto-detect the project and apply the default infra baseline      |
+| `setup` | Customize the infra baseline with an interactive flow             |
+| `add`   | Add one feature or package preset and sync AI rules               |
 | `list`  | Show supported frameworks, features, formatters, and test runners |
 
 ---
 
-## Init Interactive Flow
+## Init Flow
 
-During `init`, `Treg` asks for:
+During `init`, `Treg` auto-detects:
+
+- package manager
+- framework, in detection order `nuxt -> next -> react -> vue -> svelte -> node`
+
+It then applies the default features:
+
+- lint
+- format
+- TypeScript
+- test
+- husky
+- AI rules guidance
+
+The only prompt is whether to install default Packages for the detected framework. Selecting `Yes` installs the framework default package preset set and writes package-specific AI rules guidance. Selecting `No` skips package installation.
+
+---
+
+## Setup Interactive Flow
+
+During `setup`, `Treg` asks for:
 
 1. **Package manager**  
    `pnpm | npm | yarn | bun`
@@ -124,13 +152,14 @@ During `init`, `Treg` asks for:
    - Codex
    - Gemini
 
-6. **Common package installation**
-   - `No`
+6. **Package installation**
    - `Yes`
+   - `No`
 
-7. **Common packages** (only when package installation is selected)
+7. **Packages** (only when package installation is selected)
    - Shared options for every framework, such as Zod and date-fns
    - Framework-specific options, such as Tailwind CSS, Zustand or Pinia, TanStack Query, TanStack Router, and framework i18n packages
+   - You can leave this selection empty and continue.
 
 Node.js is treated as a backend target, so its package list focuses on server, configuration, logging, and database tooling.
 
@@ -138,31 +167,24 @@ Selected packages are installed as dependencies or dev dependencies based on how
 
 ---
 
-## Add Interactive Flow
+## Add Flow
 
-During `add`, `Treg` asks for:
+`add` installs one target at a time:
 
-1. **Features** (multi-select)
-   - lint
-   - format
-   - TypeScript
-   - test
-   - husky
-   - AI rules guidance (only when an AI rules file already exists)
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
+```
 
-2. **Formatter** (only when `format` is selected)
-   - `prettier`
-   - `oxfmt`
+Supported feature targets:
 
-3. **Test runner** (only when `test` is selected)
-   - `jest`
-   - `vitest`
-   - `skip`
+- `lint`
+- `format`
+- `typescript`
+- `test`
+- `husky`
 
-4. **AI tools** (only when AI rules guidance is selected)
-   - Claude
-   - Codex
-   - Gemini
+Package targets use the detected framework's preset list. For example, `add zustand` installs the framework-specific Zustand preset when the current project is React or Next.js. Unlike running the package manager directly, `add` also syncs the related AI rules guidance.
 
 ---
 
@@ -180,29 +202,29 @@ Preview init plan only:
 npx @tylercore/treg init --dry-run
 ```
 
-Add only lint + format:
+Customize setup:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
 ```
-
-Then select `lint` and `format`.
 
 Add format using `oxfmt`:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add format --formatter oxfmt
 ```
-
-Then select `format`, then `oxfmt`.
 
 Add test using `vitest`:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add test --test-runner vitest
 ```
 
-Then select `test`, then `vitest`.
+Add Zustand and sync AI rules:
+
+```bash
+npx @tylercore/treg add zustand
+```
 
 ---
 
@@ -215,19 +237,18 @@ Then select `test`, then `vitest`.
 --help
 ```
 
-### `add`
-
-Interactive mode:
+### `setup`
 
 ```text
-add
+--dry-run
+--help
 ```
 
-Optional automation flags:
+### `add`
 
 ```text
+add <lint|format|typescript|test|husky|package-preset>
 --framework <node|react|next|vue|svelte|nuxt>
---features <lint,format,typescript,test,husky>
 --dir <path>
 --formatter <prettier|oxfmt>
 --test-runner <jest|vitest>

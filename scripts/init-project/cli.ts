@@ -9,7 +9,7 @@ import type {
   TestRunner,
 } from "./types.ts"
 
-const ALLOWED_COMMANDS: readonly CommandName[] = ["init", "add", "list"]
+const ALLOWED_COMMANDS: readonly CommandName[] = ["init", "setup", "add", "list"]
 const ALLOWED_FRAMEWORKS: readonly FrameworkId[] = [
   "node",
   "react",
@@ -26,8 +26,9 @@ const DEFAULT_AI_TOOLS: readonly AiTool[] = ["claude", "codex", "gemini"]
 export const USAGE = `Usage: treg <command> [options]
 
 Commands:
-  init                                Initialize infra rules in a project (interactive setup)
-  add                                 Add selected infra features to an existing project (interactive setup)
+  init                                Auto-detect and apply the default infra baseline
+  setup                               Customize infra rules with an interactive setup flow
+  add <feature|package>               Add one infra feature or package preset and sync AI rules
   list                                List supported frameworks, features, formatters, and test runners
 
 Options:
@@ -35,11 +36,8 @@ Options:
   -h, --help                          Show help
 
 Add command options:
-  (no add-specific flags)             Start interactive feature selection
   --framework <node|react|next|vue|svelte|nuxt>
                                       Optional framework override (default: auto-detected)
-  --features <lint,format,typescript,test,husky>
-                                      Features to install (optional automation mode)
   --dir <path>                        Target directory (defaults to current directory)
   --formatter <prettier|oxfmt>        Formatter for format feature (default: prettier)
   --test-runner <jest|vitest>         Optional test runner override (default: vue/nuxt=vitest, others=jest)
@@ -51,6 +49,7 @@ interface RawParsedOptions {
   command: string
   projectDir: string | null
   framework: string | null
+  addTarget: string | null
   formatter: string
   features: string[]
   testRunner: string | null
@@ -74,7 +73,7 @@ function isFrameworkId(value: string): value is FrameworkId {
   return includes(ALLOWED_FRAMEWORKS, value)
 }
 
-function isFeatureName(value: string): value is FeatureName {
+export function isFeatureName(value: string): value is FeatureName {
   return includes(ALLOWED_FEATURES, value)
 }
 
@@ -91,6 +90,7 @@ export function parseArgs(argv: string[]): ParsedOptions {
     command: "init",
     projectDir: null,
     framework: null,
+    addTarget: null,
     formatter: "prettier",
     features: [],
     testRunner: null,
@@ -130,16 +130,16 @@ export function parseArgs(argv: string[]): ParsedOptions {
       )
     }
 
-    if (arg === "--framework") {
+    if (!arg.startsWith("-")) {
+      if (options.addTarget) {
+        throw new Error(`Unknown argument: ${arg}`)
+      }
+      options.addTarget = arg
+    } else if (arg === "--framework") {
       options.framework = readFlagValue(argv, i, "--framework")
       i += 1
     } else if (arg.startsWith("--framework=")) {
       options.framework = readInlineFlagValue(arg, "--framework")
-    } else if (arg === "--features") {
-      options.features.push(...parseCsvValue(argv[i + 1], "--features"))
-      i += 1
-    } else if (arg.startsWith("--features=")) {
-      options.features.push(...parseCsvValue(readInlineFlagValue(arg, "--features"), "--features"))
     } else if (arg === "--dir") {
       options.projectDir = readFlagValue(argv, i, "--dir")
       i += 1
@@ -184,17 +184,6 @@ function readInlineFlagValue(arg: string, flagName: string): string {
   return rawValue
 }
 
-function parseCsvValue(rawValue: string | undefined, flagName: string): string[] {
-  if (!rawValue) {
-    throw new Error(`Missing value for ${flagName}`)
-  }
-
-  return rawValue
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
-
 function validateParsedOptions(options: RawParsedOptions): asserts options is ParsedOptions {
   if (!isCommandName(options.command)) {
     throw new Error(`Unsupported command: ${options.command}`)
@@ -216,9 +205,13 @@ function validateParsedOptions(options: RawParsedOptions): asserts options is Pa
     throw new Error(`Unsupported test runner: ${options.testRunner}`)
   }
 
+  if (options.command === "add" && !options.help && !options.addTarget) {
+    throw new Error("Missing add target. Usage: treg add <feature|package>")
+  }
+
   for (const feature of options.features) {
     if (!isFeatureName(feature)) {
-      throw new Error(`Unsupported feature in --features: ${feature}`)
+      throw new Error(`Unsupported feature: ${feature}`)
     }
   }
 }
@@ -227,6 +220,12 @@ export function resolveFeatures(options: Pick<ParsedOptions, "features">): Enabl
   const selected = new Set<FeatureName>(
     options.features.length > 0 ? options.features : ALLOWED_FEATURES
   )
+
+  return resolveFeatureNames([...selected])
+}
+
+export function resolveFeatureNames(features: readonly FeatureName[]): EnabledFeatures {
+  const selected = new Set(features)
 
   return {
     lint: selected.has("lint"),

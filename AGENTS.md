@@ -55,11 +55,14 @@
 
 ## CLI behavior rules
 
-- `init` 需預設依賴偵測框架（順序：`nuxt -> next -> react -> vue -> svelte -> node`）。
-- `init` 改為問答式流程，依序詢問：package manager、features、test runner（可跳過）、formatter（可跳過）、ai tools（可複選，可跳過）。
+- `init` 需自動偵測 package manager 與 framework（順序：`nuxt -> next -> react -> vue -> svelte -> node`），並套用各 framework 的預設 features 與 package preset 組合。
+- `init` 唯一互動選項為是否安裝預設 Packages；`Yes` 安裝預設 packages，`No` 不安裝 packages。
 - `init` 僅保留 `--dry-run`（與 `--help`）參數。
+- `setup` 相當於可自訂的初始化流程，依序詢問：package manager、features、test runner（可跳過）、formatter（可跳過）、ai tools（可複選，可跳過）、Packages。
+- `setup` 的 Packages 安裝流程中 `Yes` 必須排第一個，進入 Packages 多選後允許空選直接進入下一步。
 - 不支援 `--framework-version`，每個 framework 只使用單一版本規則。
-- `add` 必須允許只安裝指定 features。
+- `add` 必須允許只安裝單一 feature 或單一 package preset，例如 `@tylercore/treg add typescript`、`@tylercore/treg add zustand`。
+- `add` 安裝 package preset 時，必須同步寫入對應 AI rules guidance。
 - `format` feature 必須支援 `--formatter <prettier|oxfmt>`，預設為 `prettier`。
 - 預設測試工具規則：`vue`/`nuxt` 使用 `vitest`，其餘 framework 使用 `jest`。
 - `test` feature 必須支援 `--test-runner <jest|vitest>`。

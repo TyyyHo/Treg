@@ -91,18 +91,10 @@ const FEATURE_NAME_BY_STEP_LABEL = Object.entries(FEATURE_STEP_LABELS).reduce(
 const TEST_RUNNER_PATTERN = /Current test runner:\s+`(jest|vitest)`/
 const PACKAGE_SECTION_HEADING = "### Package Rules and Checklist"
 
-function resolveAiRulesDocs(
-  context: Pick<RuleContext, "projectDir" | "aiTools" | "command">
-): string[] {
-  const { projectDir, aiTools, command } = context
+function resolveAiRulesDocs(context: Pick<RuleContext, "projectDir" | "aiTools">): string[] {
+  const { projectDir, aiTools } = context
   const docFiles = [...new Set(aiTools.map((tool) => AI_TOOL_DOCS[tool]))]
-  const targets = docFiles.map((fileName) => path.join(projectDir, fileName))
-
-  if (command === "add") {
-    return targets.filter((target) => existsSync(target))
-  }
-
-  return targets
+  return docFiles.map((fileName) => path.join(projectDir, fileName))
 }
 
 function getEnabledFeatures(enabledFeatures: EnabledFeatures): FeatureName[] {

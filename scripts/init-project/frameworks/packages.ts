@@ -20,6 +20,46 @@ export function getPackagePresets(frameworkId: FrameworkId): PackagePreset[] {
   return [...commonPackagePresets, ...FRAMEWORK_PACKAGE_PRESETS[frameworkId]]
 }
 
+const DEFAULT_PACKAGE_PRESET_IDS: Record<FrameworkId, readonly PackagePresetId[]> = {
+  next: ["zod", "date-fns", "tailwind", "zustand", "tanstack-query", "i18n"],
+  node: ["zod", "dotenv", "pino"],
+  nuxt: ["zod", "date-fns", "tailwind", "pinia", "tanstack-query", "i18n", "vueuse"],
+  react: ["zod", "date-fns", "tailwind", "zustand", "tanstack-query", "react-router"],
+  svelte: ["zod", "date-fns", "tailwind", "tanstack-query", "i18n", "forms"],
+  vue: ["zod", "date-fns", "tailwind", "pinia", "tanstack-query", "i18n", "vueuse"],
+}
+
+function normalizePackageTarget(value: string): string {
+  const normalized = value.trim().toLowerCase()
+  if (normalized === "zuzstand") {
+    return "zustand"
+  }
+  return normalized
+}
+
+export function getDefaultPackagePresetIds(frameworkId: FrameworkId): PackagePresetId[] {
+  return [...DEFAULT_PACKAGE_PRESET_IDS[frameworkId]]
+}
+
+export function resolvePackagePresetId(
+  frameworkId: FrameworkId,
+  target: string
+): PackagePresetId | null {
+  const normalized = normalizePackageTarget(target)
+
+  return (
+    getPackagePresets(frameworkId).find((preset) => {
+      const names = [
+        preset.id,
+        preset.label,
+        ...(preset.dependencies ?? []),
+        ...(preset.devDependencies ?? []),
+      ]
+      return names.some((name) => normalizePackageTarget(name) === normalized)
+    })?.id ?? null
+  )
+}
+
 export function getSelectedPackagePresets(
   frameworkId: FrameworkId,
   selectedIds: readonly PackagePresetId[]

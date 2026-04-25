@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@jest/globals"
-import { getPackagePresets, getSelectedPackagePresets } from "./packages.ts"
+import {
+  getDefaultPackagePresetIds,
+  getPackagePresets,
+  getSelectedPackagePresets,
+  resolvePackagePresetId,
+} from "./packages.ts"
 
 describe("framework package presets", () => {
   it("includes common packages for every framework", () => {
@@ -39,5 +44,20 @@ describe("framework package presets", () => {
     expect(getSelectedPackagePresets("vue", ["i18n"])[0]?.dependencies).toEqual(["vue-i18n"])
     expect(getSelectedPackagePresets("nuxt", ["i18n"])[0]?.dependencies).toEqual(["@nuxtjs/i18n"])
     expect(getSelectedPackagePresets("svelte", ["i18n"])[0]?.dependencies).toEqual(["svelte-i18n"])
+  })
+
+  it("resolves add targets by preset id and package name", () => {
+    expect(resolvePackagePresetId("react", "zustand")).toBe("zustand")
+    expect(resolvePackagePresetId("react", "zuzstand")).toBe("zustand")
+    expect(resolvePackagePresetId("react", "@tanstack/react-query")).toBe("tanstack-query")
+    expect(resolvePackagePresetId("vue", "pinia")).toBe("pinia")
+    expect(resolvePackagePresetId("node", "zustand")).toBeNull()
+  })
+
+  it("defines framework default package sets", () => {
+    expect(getDefaultPackagePresetIds("react")).toEqual(
+      expect.arrayContaining(["zod", "date-fns", "tailwind", "zustand"])
+    )
+    expect(getDefaultPackagePresetIds("node")).toEqual(expect.arrayContaining(["zod", "dotenv"]))
   })
 })

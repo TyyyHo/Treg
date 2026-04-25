@@ -64,7 +64,7 @@ Treg 是一個為現代應用建立程式碼品質、工具鏈與專案規範基
 
 ## 快速開始
 
-互動式初始化：
+依偵測結果套用預設設定：
 
 ```bash
 npx @tylercore/treg init
@@ -76,10 +76,17 @@ npx @tylercore/treg init
 npx @tylercore/treg init --dry-run
 ```
 
-為既有專案補上指定功能：
+互動式自訂設定：
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
+```
+
+為既有專案加入單一功能或套件 preset：
+
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
 ```
 
 ---
@@ -88,15 +95,36 @@ npx @tylercore/treg add
 
 | Command | 說明                                                  |
 | ------- | ----------------------------------------------------- |
-| `init`  | 以互動流程初始化專案基準線                            |
-| `add`   | 為既有專案加入指定功能                                |
+| `init`  | 自動偵測專案並套用預設工程基準線                      |
+| `setup` | 以互動流程自訂工程基準線                              |
+| `add`   | 加入單一功能或套件 preset，並同步 AI rules            |
 | `list`  | 列出支援的 framework、feature、formatter、test runner |
 
 ---
 
-## init 互動流程
+## init 流程
 
-執行 `init` 時，`Treg` 會依序詢問：
+執行 `init` 時，`Treg` 會自動偵測：
+
+- package manager
+- framework，偵測順序為 `nuxt -> next -> react -> vue -> svelte -> node`
+
+接著會套用預設 features：
+
+- lint
+- format
+- TypeScript
+- test
+- husky
+- AI rules guidance
+
+唯一的提問是是否安裝偵測到的 framework 預設 Packages。選 `Yes` 會安裝預設套件組合並寫入套件相關 AI rules；選 `No` 則略過套件安裝。
+
+---
+
+## setup 互動流程
+
+執行 `setup` 時，`Treg` 會依序詢問：
 
 1. **Package manager**  
    `pnpm | npm | yarn | bun`
@@ -123,13 +151,14 @@ npx @tylercore/treg add
    - Codex
    - Gemini
 
-6. **常用套件安裝**
-   - `No`
+6. **套件安裝**
    - `Yes`
+   - `No`
 
-7. **常用套件**（僅在選擇安裝套件時詢問）
+7. **Packages**（僅在選擇安裝套件時詢問）
    - 所有 framework 共用選項，例如 Zod、date-fns
    - framework 專屬選項，例如 Tailwind CSS、Zustand 或 Pinia、TanStack Query、TanStack Router，以及各 framework 對應的 i18n 套件
+   - 可不選任何項目直接進入下一步
 
 Node.js 會視為後端目標，因此套件清單會偏向 server、設定、logging 與 database tooling。
 
@@ -137,31 +166,24 @@ Node.js 會視為後端目標，因此套件清單會偏向 server、設定、lo
 
 ---
 
-## add 互動流程
+## add 流程
 
-執行 `add` 時，`Treg` 會依序詢問：
+`add` 一次只加入一個 target：
 
-1. **Features**（可複選）
-   - lint
-   - format
-   - TypeScript
-   - test
-   - husky
-   - AI rules guidance（僅在 AI rules 檔案已存在時顯示）
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
+```
 
-2. **Formatter**（僅在選到 `format` 時詢問）
-   - `prettier`
-   - `oxfmt`
+支援的 feature targets：
 
-3. **Test runner**（僅在選到 `test` 時詢問）
-   - `jest`
-   - `vitest`
-   - `skip`
+- `lint`
+- `format`
+- `typescript`
+- `test`
+- `husky`
 
-4. **AI tools**（僅在選到 AI rules guidance 時詢問）
-   - Claude
-   - Codex
-   - Gemini
+套件 target 會使用目前偵測到的 framework preset。例如 React 或 Next.js 專案執行 `add zustand` 時，會安裝對應的 Zustand preset。與直接使用 package manager 不同，`add` 也會同步相關 AI rules guidance。
 
 ---
 
@@ -179,29 +201,29 @@ npx @tylercore/treg init
 npx @tylercore/treg init --dry-run
 ```
 
-只加入 lint + format：
+互動式自訂設定：
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
 ```
-
-接著選擇 `lint` 與 `format`。
 
 format 使用 `oxfmt`：
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add format --formatter oxfmt
 ```
-
-接著選擇 `format`，再選擇 `oxfmt`。
 
 test 使用 `vitest`：
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add test --test-runner vitest
 ```
 
-接著選擇 `test`，再選擇 `vitest`。
+加入 Zustand 並同步 AI rules：
+
+```bash
+npx @tylercore/treg add zustand
+```
 
 ---
 
@@ -214,19 +236,18 @@ npx @tylercore/treg add
 --help
 ```
 
-### `add`
-
-互動模式：
+### `setup`
 
 ```text
-add
+--dry-run
+--help
 ```
 
-自動化可選參數：
+### `add`
 
 ```text
+add <lint|format|typescript|test|husky|package-preset>
 --framework <node|react|next|vue|svelte|nuxt>
---features <lint,format,typescript,test,husky>
 --dir <path>
 --formatter <prettier|oxfmt>
 --test-runner <jest|vitest>
