@@ -1,3 +1,5 @@
+import type { FrameworkId, PackagePreset, PackagePresetId } from "../types.ts"
+
 import { commonPackagePresets } from "./common/packages.ts"
 import { nextPackagePresets } from "./next/packages.ts"
 import { nodePackagePresets } from "./node/packages.ts"
@@ -5,7 +7,6 @@ import { nuxtPackagePresets } from "./nuxt/packages.ts"
 import { reactPackagePresets } from "./react/packages.ts"
 import { sveltePackagePresets } from "./svelte/packages.ts"
 import { vuePackagePresets } from "./vue/packages.ts"
-import type { FrameworkId, PackagePreset, PackagePresetId } from "../types.ts"
 
 const FRAMEWORK_PACKAGE_PRESETS: Record<FrameworkId, readonly PackagePreset[]> = {
   next: nextPackagePresets,
@@ -21,12 +22,12 @@ export function getPackagePresets(frameworkId: FrameworkId): PackagePreset[] {
 }
 
 const DEFAULT_PACKAGE_PRESET_IDS: Record<FrameworkId, readonly PackagePresetId[]> = {
-  next: ["zod", "date-fns", "tailwind", "zustand", "tanstack-query", "i18n"],
+  next: ["zod", "date-fns", "zustand", "tanstack-query"],
   node: ["zod", "dotenv", "pino"],
-  nuxt: ["zod", "date-fns", "tailwind", "pinia", "tanstack-query", "i18n", "vueuse"],
-  react: ["zod", "date-fns", "tailwind", "zustand", "tanstack-query", "react-router"],
-  svelte: ["zod", "date-fns", "tailwind", "tanstack-query", "i18n", "forms"],
-  vue: ["zod", "date-fns", "tailwind", "pinia", "tanstack-query", "i18n", "vueuse"],
+  nuxt: ["zod", "date-fns", "pinia", "tanstack-query", "vueuse"],
+  react: ["zod", "date-fns", "zustand", "tanstack-query", "tanstack-router"],
+  svelte: ["zod", "date-fns", "tanstack-query", "forms"],
+  vue: ["zod", "date-fns", "pinia", "tanstack-query", "vueuse"],
 }
 
 function normalizePackageTarget(value: string): string {
