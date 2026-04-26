@@ -1,6 +1,5 @@
 import { getPackagePresets, getSelectedPackagePresets } from "../frameworks/packages.ts"
 import type {
-  AiTool,
   EnabledFeatures,
   FeatureName,
   Framework,
@@ -14,10 +13,16 @@ import { promises as fs } from "node:fs"
 import path from "node:path"
 
 const RULE_SECTION_START_PATTERN = "### Git rules\n\n1. Never use --no-verify"
-const AI_TOOL_DOCS: Record<AiTool, string> = {
+const AGENTS_REFERENCE = "@AGENTS.md"
+const AI_RULE_DOCS = {
+  agents: "AGENTS.md",
   claude: "CLAUDE.md",
-  codex: "AGENTS.md",
   gemini: "GEMINI.md",
+} as const
+
+interface AiRulesTarget {
+  filePath: string
+  mode: "rules" | "agentsReference"
 }
 
 interface FeatureGuidance {
@@ -91,10 +96,39 @@ const FEATURE_NAME_BY_STEP_LABEL = Object.entries(FEATURE_STEP_LABELS).reduce(
 const TEST_RUNNER_PATTERN = /Current test runner:\s+`(jest|vitest)`/
 const PACKAGE_SECTION_HEADING = "### Package Rules and Checklist"
 
-function resolveAiRulesDocs(context: Pick<RuleContext, "projectDir" | "aiTools">): string[] {
-  const { projectDir, aiTools } = context
-  const docFiles = [...new Set(aiTools.map((tool) => AI_TOOL_DOCS[tool]))]
-  return docFiles.map((fileName) => path.join(projectDir, fileName))
+async function fileContainsAgentsReference(filePath: string): Promise<boolean> {
+  if (!existsSync(filePath)) {
+    return false
+  }
+
+  const content = await fs.readFile(filePath, "utf8")
+  return content.includes(AGENTS_REFERENCE)
+}
+
+async function resolveAiRulesDocs(projectDir: string): Promise<AiRulesTarget[]> {
+  const agentsPath = path.join(projectDir, AI_RULE_DOCS.agents)
+  const claudePath = path.join(projectDir, AI_RULE_DOCS.claude)
+  const geminiPath = path.join(projectDir, AI_RULE_DOCS.gemini)
+  const paths = [agentsPath, claudePath, geminiPath]
+  const existingPaths = paths.filter((filePath) => existsSync(filePath))
+
+  if (existingPaths.length === 0) {
+    return [
+      { filePath: agentsPath, mode: "rules" },
+      { filePath: claudePath, mode: "agentsReference" },
+      { filePath: geminiPath, mode: "agentsReference" },
+    ]
+  }
+
+  const hasDelegatedRules =
+    (await fileContainsAgentsReference(claudePath)) ||
+    (await fileContainsAgentsReference(geminiPath))
+
+  if (hasDelegatedRules) {
+    return [{ filePath: agentsPath, mode: "rules" }]
+  }
+
+  return existingPaths.map((filePath) => ({ filePath, mode: "rules" }))
 }
 
 function getEnabledFeatures(enabledFeatures: EnabledFeatures): FeatureName[] {
@@ -282,20 +316,50 @@ function upsertRuleSection(content: string, nextSection: string): string {
   return `${content.trimEnd()}\n\n${nextSection.trim()}\n`
 }
 
+function upsertAgentsReference(content: string): string {
+  if (content.includes(AGENTS_REFERENCE)) {
+    return content
+  }
+
+  if (!content.trim()) {
+    return `${AGENTS_REFERENCE}\n`
+  }
+
+  return `${content.trimEnd()}\n\n${AGENTS_REFERENCE}\n`
+}
+
 export async function runAiRulesRule(context: RuleContext): Promise<void> {
   const { dryRun } = context
-  const targetFiles = resolveAiRulesDocs(context)
+  const targets = await resolveAiRulesDocs(context.projectDir)
   const currentFeatures = getEnabledFeatures(context.enabledFeatures)
 
-  for (const targetFile of targetFiles) {
+  for (const target of targets) {
+    const targetFile = target.filePath
     if (dryRun) {
       const action = existsSync(targetFile) ? "update" : "create"
-      console.log(`[dry-run] Would ${action} ${path.basename(targetFile)} with AI rules content`)
+      const contentLabel =
+        target.mode === "rules" ? "AI rules content" : `${AGENTS_REFERENCE} reference`
+      console.log(`[dry-run] Would ${action} ${path.basename(targetFile)} with ${contentLabel}`)
       continue
     }
 
     const exists = existsSync(targetFile)
     const current = exists ? await fs.readFile(targetFile, "utf8") : ""
+    if (target.mode === "agentsReference") {
+      const updated = upsertAgentsReference(current)
+      if (updated !== current) {
+        await fs.mkdir(path.dirname(targetFile), { recursive: true })
+        await fs.writeFile(targetFile, updated, "utf8")
+        console.log(
+          `${exists ? "Updated" : "Created"} ${path.basename(targetFile)} with ${AGENTS_REFERENCE} reference`
+        )
+        continue
+      }
+
+      console.log(`${path.basename(targetFile)} already contains ${AGENTS_REFERENCE} reference`)
+      continue
+    }
+
     const existingFeatures = context.command === "add" ? readFeaturesFromRuleSection(current) : []
     const mergedFeatures = mergeFeatureNames(existingFeatures, currentFeatures)
     const existingPackageIds =
@@ -331,5 +395,6 @@ export const __testables__ = {
   getEnabledFeatures,
   readPackageIdsFromRuleSection,
   resolveAiRulesDocs,
+  upsertAgentsReference,
   upsertRuleSection,
 }

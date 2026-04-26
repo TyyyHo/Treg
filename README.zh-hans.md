@@ -260,7 +260,7 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 ## AI Rules 行为
 
-`Treg` 可更新所选 AI 工具的说明文件：
+`Treg` 会检查 repository root 的 AI 说明文件：
 
 | Tool   | File        |
 | ------ | ----------- |
@@ -270,10 +270,10 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 行为规则：
 
-- 只更新你选择的工具
-- 缺少的对应文件会自动创建
-- 更新发生在 repository root
-- 提示内容会直接写入每个选定的 AI 说明文件
+- 如果 `CLAUDE.md` 或 `GEMINI.md` 包含 `@AGENTS.md`，只会把 Treg guidance 写入 `AGENTS.md`
+- 如果三种 AI 说明文件中已有任一文件存在，且没有文件委派到 `@AGENTS.md`，只更新已存在的文件
+- 如果三种文件都不存在，会创建三个文件，把 guidance 写入 `AGENTS.md`，并在 `CLAUDE.md`、`GEMINI.md` 写入 `@AGENTS.md`
+- 提示内容会直接写入目标 AI 说明文件
 
 ---
 

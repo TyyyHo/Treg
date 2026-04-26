@@ -261,7 +261,7 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 ## AI Rules の挙動
 
-`Treg` は、選択したツールに対応する AI ガイダンスファイルを更新できます。
+`Treg` は、リポジトリルートの AI ガイダンスファイルを確認します。
 
 | Tool   | File        |
 | ------ | ----------- |
@@ -271,10 +271,10 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 挙動:
 
-- 選択したツールのみ更新
-- 対象ファイルがない場合は自動作成
-- 更新はリポジトリルートで実行
-- プロンプトは選択した各 AI ガイダンス文書へ直接書き込み
+- `CLAUDE.md` または `GEMINI.md` に `@AGENTS.md` が含まれる場合、Treg guidance は `AGENTS.md` のみに書き込み
+- 3 種類の AI ガイダンスファイルのいずれかが存在し、どれも `@AGENTS.md` に委譲していない場合、既存ファイルのみ更新
+- 3 種類のファイルがすべて存在しない場合、3 ファイルを作成し、guidance を `AGENTS.md` に書き込み、`CLAUDE.md` と `GEMINI.md` には `@AGENTS.md` を書き込み
+- プロンプトは対象の AI ガイダンス文書へ直接書き込み
 
 ---
 

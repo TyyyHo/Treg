@@ -261,7 +261,7 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 ## Comportamiento de AI Rules
 
-`Treg` puede actualizar archivos de guía de AI para las herramientas seleccionadas:
+`Treg` revisa los archivos de guía de AI en la raíz del repositorio:
 
 | Tool   | Archivo     |
 | ------ | ----------- |
@@ -271,10 +271,10 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 Comportamiento:
 
-- solo se actualizan las herramientas seleccionadas
-- los documentos faltantes se crean automáticamente
-- las actualizaciones se realizan en la raíz del repositorio
-- los prompts se escriben directamente dentro de cada documento de guía de AI seleccionado
+- si `CLAUDE.md` o `GEMINI.md` contiene `@AGENTS.md`, solo `AGENTS.md` recibe la guía de Treg
+- si ya existe algún archivo de guía de AI y ninguno delega a `@AGENTS.md`, solo se actualizan los archivos existentes
+- si no existe ninguno de los tres archivos, Treg crea los tres, escribe la guía en `AGENTS.md` y escribe `@AGENTS.md` en `CLAUDE.md` y `GEMINI.md`
+- los prompts se escriben directamente en el documento de guía de AI objetivo
 
 ---
 

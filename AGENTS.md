@@ -71,5 +71,7 @@
 ## AI rules
 
 - 每個 feature 對應一段直接寫入 AI 文件的提示（不建立額外 skill 檔）。
-- 若啟用 ai-rules，會依使用者選擇的 AI tools 更新對應檔案（`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`）。
-- 若對應檔案不存在，需先自動建立再注入說明。
+- 若啟用 ai-rules，先檢查 `AGENTS.md`、`CLAUDE.md`、`GEMINI.md` 是否存在。
+- 若 `CLAUDE.md` 或 `GEMINI.md` 內含 `@AGENTS.md`，只更新 `AGENTS.md`，且不更動另外兩個檔案。
+- 若已有任一 AI 文件存在且沒有 `@AGENTS.md` 委派，只更新已存在檔案，不建立新檔案。
+- 若三種檔案皆不存在，需建立三個檔案，在 `AGENTS.md` 注入說明，並在 `CLAUDE.md`、`GEMINI.md` 寫入 `@AGENTS.md`。

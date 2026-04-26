@@ -56,7 +56,7 @@ describe("framework package presets", () => {
 
   it("defines framework default package sets", () => {
     expect(getDefaultPackagePresetIds("react")).toEqual(
-      expect.arrayContaining(["zod", "date-fns", "tailwind", "zustand"])
+      expect.arrayContaining(["zod", "date-fns", "zustand", "tanstack-router"])
     )
     expect(getDefaultPackagePresetIds("node")).toEqual(expect.arrayContaining(["zod", "dotenv"]))
   })

@@ -116,7 +116,7 @@ prettier
 
 ## AI Rules Behavior
 
-`Treg` can update AI guidance files for selected tools:
+`Treg` checks the AI guidance files in the repository root:
 
 | Tool   | File        |
 | ------ | ----------- |
@@ -126,9 +126,9 @@ prettier
 
 Behavior:
 
-- only selected tools are updated
-- missing files are created automatically
-- updates happen in the repository root
+- if `CLAUDE.md` or `GEMINI.md` contains `@AGENTS.md`, only `AGENTS.md` receives Treg guidance
+- if any AI guidance file already exists and no file delegates to `@AGENTS.md`, only existing files are updated
+- if none of the three files exist, Treg creates all three files, writes guidance to `AGENTS.md`, and writes `@AGENTS.md` to `CLAUDE.md` and `GEMINI.md`
 
 ---
 
