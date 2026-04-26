@@ -1,4 +1,4 @@
-export type CommandName = "init" | "add" | "list"
+export type CommandName = "init" | "setup" | "add" | "list"
 
 export type PackageManager = "pnpm" | "npm" | "yarn" | "bun"
 
@@ -41,6 +41,7 @@ export interface ParsedOptions {
   command: CommandName
   projectDir: string | null
   framework: FrameworkId | null
+  addTarget: string | null
   formatter: Formatter
   features: FeatureName[]
   testRunner: TestRunner | null

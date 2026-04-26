@@ -65,7 +65,7 @@ Esto mantiene el proyecto estable sin forzar decisiones de arquitectura de produ
 
 ## Inicio rápido
 
-Inicializa de forma interactiva:
+Inicializa con valores detectados automáticamente:
 
 ```bash
 npx @tylercore/treg init
@@ -77,10 +77,17 @@ Previsualiza cambios sin aplicarlos:
 npx @tylercore/treg init --dry-run
 ```
 
-Agrega features a un proyecto existente:
+Personaliza la configuración de forma interactiva:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
+```
+
+Agrega una feature o un preset de paquete a un proyecto existente:
+
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
 ```
 
 ---
@@ -89,15 +96,24 @@ npx @tylercore/treg add
 
 | Comando | Descripción                                                         |
 | ------- | ------------------------------------------------------------------- |
-| `init`  | Inicializa el proyecto con un flujo interactivo                     |
-| `add`   | Agrega features seleccionadas a un proyecto existente               |
+| `init`  | Detecta el proyecto y aplica la base de infraestructura por defecto |
+| `setup` | Personaliza la base de infraestructura con un flujo interactivo     |
+| `add`   | Agrega una feature o preset de paquete y sincroniza AI rules        |
 | `list`  | Muestra frameworks, features, formatters y test runners compatibles |
 
 ---
 
-## Flujo interactivo de `init`
+## Flujo de `init`
 
-Durante `init`, `Treg` pregunta:
+Durante `init`, `Treg` detecta el package manager y el framework (orden: `nuxt -> next -> react -> vue -> svelte -> node`) y aplica las features por defecto: lint, format, TypeScript, test, husky y AI rules guidance.
+
+La única pregunta es si se instalan los Packages por defecto del framework detectado. `Yes` instala el conjunto de paquetes por defecto y escribe sus guías de AI rules; `No` omite la instalación de paquetes.
+
+---
+
+## Flujo interactivo de `setup`
+
+Durante `setup`, `Treg` pregunta:
 
 1. **Package manager**  
    `pnpm | npm | yarn | bun`
@@ -124,33 +140,29 @@ Durante `init`, `Treg` pregunta:
    - Codex
    - Gemini
 
+6. **Instalación de paquetes**
+   - `Yes`
+   - `No`
+
+7. **Packages** (solo si se selecciona instalar paquetes)
+   - Opciones compartidas por todos los frameworks, como Zod y date-fns
+   - Opciones por framework, como Tailwind CSS, Zustand o Pinia, TanStack Query, TanStack Router y paquetes i18n
+   - Puedes dejar esta selección vacía y continuar
+
 ---
 
-## Flujo interactivo de `add`
+## Flujo de `add`
 
-Durante `add`, `Treg` pregunta:
+`add` instala un solo target por ejecución:
 
-1. **Features** (selección múltiple)
-   - lint
-   - format
-   - TypeScript
-   - test
-   - husky
-   - AI rules guidance (solo cuando ya existe un archivo de AI rules)
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
+```
 
-2. **Formatter** (solo si se selecciona `format`)
-   - `prettier`
-   - `oxfmt`
+Feature targets compatibles: `lint`, `format`, `typescript`, `test`, `husky`.
 
-3. **Test runner** (solo si se selecciona `test`)
-   - `jest`
-   - `vitest`
-   - `skip`
-
-4. **AI tools** (solo si se selecciona AI rules guidance)
-   - Claude
-   - Codex
-   - Gemini
+Los targets de paquete usan la lista de presets del framework detectado. Por ejemplo, `add zustand` instala el preset de Zustand en proyectos React o Next.js. A diferencia de usar el package manager directamente, `add` también sincroniza la guía de AI rules relacionada.
 
 ---
 
@@ -168,29 +180,29 @@ Solo previsualizar el plan de `init`:
 npx @tylercore/treg init --dry-run
 ```
 
-Agregar solo lint + format:
+Personalizar configuración:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg setup
 ```
-
-Luego selecciona `lint` y `format`.
 
 Agregar format usando `oxfmt`:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add format --formatter oxfmt
 ```
-
-Luego selecciona `format`, y después `oxfmt`.
 
 Agregar test usando `vitest`:
 
 ```bash
-npx @tylercore/treg add
+npx @tylercore/treg add test --test-runner vitest
 ```
 
-Luego selecciona `test`, y después `vitest`.
+Agregar Zustand y sincronizar AI rules:
+
+```bash
+npx @tylercore/treg add zustand
+```
 
 ---
 
@@ -203,19 +215,18 @@ Luego selecciona `test`, y después `vitest`.
 --help
 ```
 
-### `add`
-
-Modo interactivo:
+### `setup`
 
 ```text
-add
+--dry-run
+--help
 ```
 
-Flags opcionales para automatización:
+### `add`
 
 ```text
+add <lint|format|typescript|test|husky|package-preset>
 --framework <node|react|next|vue|svelte|nuxt>
---features <lint,format,typescript,test,husky>
 --dir <path>
 --formatter <prettier|oxfmt>
 --test-runner <jest|vitest>
@@ -250,7 +261,7 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 ## Comportamiento de AI Rules
 
-`Treg` puede actualizar archivos de guía de AI para las herramientas seleccionadas:
+`Treg` revisa los archivos de guía de AI en la raíz del repositorio:
 
 | Tool   | Archivo     |
 | ------ | ----------- |
@@ -260,10 +271,10 @@ nuxt -> next -> react -> vue -> svelte -> node
 
 Comportamiento:
 
-- solo se actualizan las herramientas seleccionadas
-- los documentos faltantes se crean automáticamente
-- las actualizaciones se realizan en la raíz del repositorio
-- los prompts se escriben directamente dentro de cada documento de guía de AI seleccionado
+- si `CLAUDE.md` o `GEMINI.md` contiene `@AGENTS.md`, solo `AGENTS.md` recibe la guía de Treg
+- si ya existe algún archivo de guía de AI y ninguno delega a `@AGENTS.md`, solo se actualizan los archivos existentes
+- si no existe ninguno de los tres archivos, Treg crea los tres, escribe la guía en `AGENTS.md` y escribe `@AGENTS.md` en `CLAUDE.md` y `GEMINI.md`
+- los prompts se escriben directamente en el documento de guía de AI objetivo
 
 ---
 

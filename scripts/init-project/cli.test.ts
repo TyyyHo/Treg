@@ -5,14 +5,13 @@ describe("parseArgs", () => {
   it("parses add command options", () => {
     const parsed = parseArgs([
       "add",
+      "test",
       "--dir",
       "demo-app",
       "--framework",
       "react",
       "--formatter",
       "oxfmt",
-      "--features",
-      "lint,test",
       "--test-runner",
       "vitest",
       "--force",
@@ -24,8 +23,9 @@ describe("parseArgs", () => {
       command: "add",
       projectDir: "demo-app",
       framework: "react",
+      addTarget: "test",
       formatter: "oxfmt",
-      features: ["lint", "test"],
+      features: [],
       testRunner: "vitest",
       force: true,
       dryRun: true,
@@ -57,29 +57,43 @@ describe("parseArgs", () => {
     expect(parsed.testRunner).toBeNull()
   })
 
+  it("allows setup without options", () => {
+    const parsed = parseArgs(["setup"])
+    expect(parsed.command).toBe("setup")
+    expect(parsed.framework).toBeNull()
+    expect(parsed.addTarget).toBeNull()
+  })
+
   it("accepts oxfmt formatter override for add", () => {
-    const parsed = parseArgs(["add", "--formatter", "oxfmt"])
+    const parsed = parseArgs(["add", "format", "--formatter", "oxfmt"])
     expect(parsed.formatter).toBe("oxfmt")
   })
 
   it("throws for unsupported framework", () => {
-    expect(() => parseArgs(["add", "--framework", "angular"])).toThrow(
+    expect(() => parseArgs(["add", "lint", "--framework", "angular"])).toThrow(
       "Unsupported framework: angular"
     )
   })
 
   it("throws for unsupported formatter", () => {
-    expect(() => parseArgs(["add", "--formatter", "biome"])).toThrow("Unsupported formatter: biome")
-  })
-
-  it("throws for positional dir argument", () => {
-    expect(() => parseArgs(["add", "."])).toThrow("Unknown argument: .")
-  })
-
-  it("throws for unsupported feature", () => {
-    expect(() => parseArgs(["add", "--framework", "node", "--features", "husky,ai"])).toThrow(
-      "Unsupported feature in --features: ai"
+    expect(() => parseArgs(["add", "format", "--formatter", "biome"])).toThrow(
+      "Unsupported formatter: biome"
     )
+  })
+
+  it("parses positional add target", () => {
+    expect(parseArgs(["add", "zustand"]).addTarget).toBe("zustand")
+  })
+
+  it("throws when add target is missing", () => {
+    expect(() => parseArgs(["add"])).toThrow("Missing add target")
+  })
+
+  it("allows add help without a target", () => {
+    const parsed = parseArgs(["add", "--help"])
+    expect(parsed.command).toBe("add")
+    expect(parsed.help).toBe(true)
+    expect(parsed.addTarget).toBeNull()
   })
 
   it("throws when init receives removed flags", () => {
@@ -89,12 +103,14 @@ describe("parseArgs", () => {
   })
 
   it("throws when add receives removed pm flag", () => {
-    expect(() => parseArgs(["add", "--pm", "npm"])).toThrow("Unknown argument: --pm")
+    expect(() => parseArgs(["add", "lint", "--pm", "npm"])).toThrow("Unknown argument: --pm")
   })
 
   it("throws for removed no flags", () => {
-    expect(() => parseArgs(["add", "--no-format"])).toThrow("Unknown argument: --no-format")
-    expect(() => parseArgs(["add", "--no-test-runner"])).toThrow(
+    expect(() => parseArgs(["add", "format", "--no-format"])).toThrow(
+      "Unknown argument: --no-format"
+    )
+    expect(() => parseArgs(["add", "test", "--no-test-runner"])).toThrow(
       "Unknown argument: --no-test-runner"
     )
   })
@@ -102,7 +118,7 @@ describe("parseArgs", () => {
 
 describe("resolveFeatures", () => {
   it("enables all features by default", () => {
-    expect(resolveFeatures(parseArgs(["add"]))).toEqual({
+    expect(resolveFeatures(parseArgs(["init"]))).toEqual({
       lint: true,
       format: true,
       typescript: true,
@@ -112,7 +128,7 @@ describe("resolveFeatures", () => {
   })
 
   it("uses selected features", () => {
-    expect(resolveFeatures(parseArgs(["add", "--features", "lint,format,husky"]))).toEqual({
+    expect(resolveFeatures({ features: ["lint", "format", "husky"] })).toEqual({
       lint: true,
       format: true,
       typescript: false,

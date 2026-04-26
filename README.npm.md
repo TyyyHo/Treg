@@ -33,7 +33,7 @@ Treg focuses on infrastructure setup (ESLint, Prettier, TypeScript, testing, hoo
 
 ## Quick Start
 
-Initialize interactively:
+Initialize with auto-detected defaults:
 
 ```bash
 npx @tylercore/treg init
@@ -45,10 +45,17 @@ Preview changes only:
 npx @tylercore/treg init --dry-run
 ```
 
-Add selected features to an existing project:
+Customize setup interactively:
 
 ```bash
-npx @tylercore/treg add --features lint,format
+npx @tylercore/treg setup
+```
+
+Add one feature or package preset:
+
+```bash
+npx @tylercore/treg add typescript
+npx @tylercore/treg add zustand
 ```
 
 ---
@@ -57,30 +64,31 @@ npx @tylercore/treg add --features lint,format
 
 | Command | Description                                                       |
 | ------- | ----------------------------------------------------------------- |
-| `init`  | Initialize the project with an interactive setup flow             |
-| `add`   | Add selected features to an existing project                      |
+| `init`  | Auto-detect the project and apply the default infra baseline      |
+| `setup` | Customize the infra baseline with an interactive flow             |
+| `add`   | Add one feature or package preset and sync AI rules               |
 | `list`  | Show supported frameworks, features, formatters, and test runners |
 
 ---
 
 ## Common Usage
 
-Add only lint + format:
-
-```bash
-npx @tylercore/treg add --features lint,format
-```
-
 Add format using `oxfmt`:
 
 ```bash
-npx @tylercore/treg add --features format --formatter oxfmt
+npx @tylercore/treg add format --formatter oxfmt
 ```
 
 Add test using `vitest`:
 
 ```bash
-npx @tylercore/treg add --features test --test-runner vitest
+npx @tylercore/treg add test --test-runner vitest
+```
+
+Add Zustand and sync AI rules:
+
+```bash
+npx @tylercore/treg add zustand
 ```
 
 ---
@@ -108,7 +116,7 @@ prettier
 
 ## AI Rules Behavior
 
-`Treg` can update AI guidance files for selected tools:
+`Treg` checks the AI guidance files in the repository root:
 
 | Tool   | File        |
 | ------ | ----------- |
@@ -118,9 +126,9 @@ prettier
 
 Behavior:
 
-- only selected tools are updated
-- missing files are created automatically
-- updates happen in the repository root
+- if `CLAUDE.md` or `GEMINI.md` contains `@AGENTS.md`, only `AGENTS.md` receives Treg guidance
+- if any AI guidance file already exists and no file delegates to `@AGENTS.md`, only existing files are updated
+- if none of the three files exist, Treg creates all three files, writes guidance to `AGENTS.md`, and writes `@AGENTS.md` to `CLAUDE.md` and `GEMINI.md`
 
 ---
 
